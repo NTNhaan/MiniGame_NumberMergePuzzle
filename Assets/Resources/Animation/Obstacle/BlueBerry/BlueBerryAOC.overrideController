@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BlueBerryAOC
+  m_Controller: {fileID: 9100000, guid: 7a75b26e784de4b4bb9a00479e11604b, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: a4d3f166813a3e34fb4241de8e885bb5, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: ae45bca3ffe1764468f704d5c766bb84, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 2d79a535bbc20e74b89ad0fba515af32, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 1076d375e106f644d9810462dafd2f99, type: 2}
