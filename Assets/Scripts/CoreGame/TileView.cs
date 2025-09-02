@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class TileView : MonoBehaviour
 {
     [SerializeField] private Image background;
-    [SerializeField] private Text valueText; // Using legacy Text; replace with TMP_Text if using TextMeshPro
+    [SerializeField] private Text valueText;
 
     public int Value { get; private set; }
     public int X { get; private set; }

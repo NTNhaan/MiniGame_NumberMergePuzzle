@@ -9,7 +9,9 @@ public static class EventManager
     public static event UnityAction<int> OnAddPoints;
     public static void AddPoints(int points) => OnAddPoints?.Invoke(points);
     public static event UnityAction<int> OnHPchanged;
-    public static void  HPChanged(int hp) => OnHPchanged?.Invoke(hp);
+    public static void HPChanged(int hp) => OnHPchanged?.Invoke(hp);
     public static event UnityAction OnInitData;
     public static void Initatata() => OnInitData?.Invoke();
+    public static event UnityAction<int, int> OnTileSpawnAnimationComplete;
+    public static void TileSpawnAnimationComplete(int x, int y) => OnTileSpawnAnimationComplete?.Invoke(x, y);
 }
