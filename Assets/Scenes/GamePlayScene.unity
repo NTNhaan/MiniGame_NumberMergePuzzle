@@ -1027,6 +1027,7 @@ MonoBehaviour:
   baseValue: 2
   allowedValues: 0200000004000000080000001000000020000000
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  brickSet: {fileID: 11400000, guid: ca7ea63107e89dd43815d3e1bef4a800, type: 2}
   enableDebug: 1
   newItemPopDuration: 0.2
   popCurve:
@@ -5755,6 +5756,7 @@ MonoBehaviour:
   gridController: {fileID: 1876347703}
   tilePrefab: {fileID: 8417045416668452963, guid: b0400599903912445bfb4a1d9339d2a3, type: 3}
   tileContainer: {fileID: 1876347700}
+  brickSet: {fileID: 11400000, guid: ca7ea63107e89dd43815d3e1bef4a800, type: 2}
   preloadCount: 20
   enableDebug: 1
   moveDuration: 0.35

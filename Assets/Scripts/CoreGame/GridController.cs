@@ -13,17 +13,17 @@ public class GridController : MonoBehaviour
     [SerializeField] private GameObject cellPrefab;
 
     [Header("Layout (UI)")]
-    [SerializeField] private Vector2 cellSize = default; // lấy từ DataConfig nếu (0,0)
-    [SerializeField] private Vector2 spacing = default;  // lấy từ DataConfig nếu (0,0)
+    [SerializeField] private Vector2 cellSize = default;
+    [SerializeField] private Vector2 spacing = default;
     [SerializeField] private bool useGridLayoutGroup = DataConfig.GRID_USE_LAYOUT_GROUP;
 
     private GridLayoutGroup _gridLayout;
     private readonly List<RectTransform> _spawned = new();
-    public System.Action<int> OnColumnSelected; // callback: column index
+    public System.Action<int> OnColumnSelected;
 
     [Header("Auto Spawn (Fallback)")]
-    [SerializeField] private bool autoSpawnOnClick = true; // nếu không ai subscribe sẽ tự spawn
-    [SerializeField] private SpawnQueue autoSpawnQueue; // tham chiếu SpawnQueue
+    [SerializeField] private bool autoSpawnOnClick = true;
+    [SerializeField] private SpawnQueue autoSpawnQueue;
     [SerializeField] private bool debugAuto = true;
 
     public int Columns => columns;
@@ -33,7 +33,6 @@ public class GridController : MonoBehaviour
     private void Awake()
     {
         ValidateParent();
-        // Áp dụng cấu hình tĩnh nếu chưa set thủ công trong inspector
         if (cellSize == default || cellSize.sqrMagnitude < 1f) cellSize = DataConfig.GRID_CELL_SIZE;
         if (spacing == default && DataConfig.GRID_CELL_SPACING != Vector2.zero) spacing = DataConfig.GRID_CELL_SPACING;
         SetupLayout();
@@ -72,15 +71,12 @@ public class GridController : MonoBehaviour
         if (gridParent == null)
         {
             gridParent = GetComponent<RectTransform>();
-            Debug.Log("[GridController] gridParent null -> auto assign self RectTransform");
         }
 
         if (gridParent != null)
         {
-            // Nếu object không có scene hợp lệ (scene.name is null hoặc rỗng) => có thể là prefab asset (trong editor)
             if (!Application.isPlaying && !gridParent.gameObject.scene.IsValid())
             {
-                Debug.LogWarning("[GridController] gridParent có vẻ là prefab asset (scene invalid). Đổi sang self để tránh lỗi Instantiate parent persistent.");
                 gridParent = GetComponent<RectTransform>();
             }
         }
@@ -91,12 +87,10 @@ public class GridController : MonoBehaviour
     {
         if (gridParent == null)
         {
-            Debug.LogError("GridController: gridParent chưa được gán.");
             return;
         }
         if (cellPrefab == null)
         {
-            Debug.LogError("GridController: cellPrefab chưa được gán.");
             return;
         }
         ClearGrid();
@@ -163,10 +157,8 @@ public class GridController : MonoBehaviour
         return _spawned[index];
     }
 
-    // Được gọi từ GridCell khi click
     public void OnCellClicked(GridCell cell)
     {
-        // Trả về column từ cell.X
         bool hadListeners = OnColumnSelected != null;
         OnColumnSelected?.Invoke(cell.X);
         Debug.Log($"[GridController] Click column {cell.X} (type {cell.ColumnType}) listeners={(hadListeners ? OnColumnSelected.GetInvocationList().Length : 0)}");

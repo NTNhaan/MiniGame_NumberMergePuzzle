@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d75bb3cf23821241b040bacb0310635, type: 3}
+  m_Name: BrickSet
+  m_EditorClassIdentifier: 
+  bricks:
+  - number: 2
+    sprite: {fileID: 2914995515826552882, guid: 10f530dfcfc866f48b1c63adb6cfa2b2, type: 3}
+  - number: 4
+    sprite: {fileID: 6603463009835962209, guid: 0e756a4d6ca2302468985f835ddd19ee, type: 3}
+  - number: 8
+    sprite: {fileID: -9071899113742831896, guid: c25b5d2c5cf3a3148b9a9f2b5862337f, type: 3}
+  - number: 16
+    sprite: {fileID: -610292359897980827, guid: 8379833e0f56258469c37bea0cc1b804, type: 3}
+  - number: 32
+    sprite: {fileID: -2247878328431328384, guid: d736bc1f655a08e4393f6a27e422d711, type: 3}
+  - number: 64
+    sprite: {fileID: 1206345604599674469, guid: a0425505fcee9714aaf9ec2c04cb57be, type: 3}

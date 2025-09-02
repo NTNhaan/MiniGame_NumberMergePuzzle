@@ -8,6 +8,8 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private GridController gridController;
     [SerializeField] private TileView tilePrefab;
     [SerializeField] private Transform tileContainer;
+    [Header("Brick Data")]
+    [SerializeField] private BrickSet brickSet; 
 
     [Header("Pool Settings")]
     [SerializeField] private int preloadCount = 20;
@@ -49,7 +51,6 @@ public class TileSystem : MonoBehaviour
     {
         if (tilePrefab == null)
         {
-            DebugLog("GetFromPool FAIL: tilePrefab null");
             return null;
         }
         int safety = _pool.Count + 2;
@@ -58,7 +59,6 @@ public class TileSystem : MonoBehaviour
             var peek = _pool.Dequeue();
             if (peek == null || peek.Equals(null))
             {
-                DebugLog("GetFromPool: bỏ 1 tile đã destroy khỏi pool");
                 continue;
             }
             if (!peek.gameObject.activeSelf)
@@ -67,7 +67,6 @@ public class TileSystem : MonoBehaviour
         }
         var extra = Instantiate(tilePrefab, tileContainer);
         extra.gameObject.SetActive(true);
-        DebugLog("GetFromPool: tạo tile mới vì pool trống hoặc tất cả bị destroy");
         return extra;
     }
 
@@ -76,20 +75,19 @@ public class TileSystem : MonoBehaviour
         if (!IsInside(x, y)) return null;
         if (_tiles.ContainsKey((x, y)))
         {
-            DebugLog($"SpawnTile FAIL: Ô ({x},{y}) đã có tile.");
             return null;
         }
 
         var cell = gridController.GetCell(x, y);
         if (cell == null)
         {
-            Debug.LogError($"Không tìm thấy cell ({x},{y}).");
             return null;
         }
 
         var tile = GetFromPool();
         tile.transform.SetParent(cell, false);
         tile.Initialize(value, color, x, y);
+        ApplySprite(tile, value);
         _tiles[(x, y)] = tile;
         return tile;
     }
@@ -154,6 +152,7 @@ public class TileSystem : MonoBehaviour
 
         var tile = GetFromPool();
         tile.Initialize(value, color, column, targetRow);
+        ApplySprite(tile, value);
 
         RectTransform animationParent = gridController != null ? gridController.GridParent : (RectTransform)tileContainer;
         if (preserveQueueStart && useRootCanvasForQueueStart && startRect != null && !startRect.Equals(null))
@@ -351,6 +350,7 @@ public class TileSystem : MonoBehaviour
             Vector3 preReparentWorld = rect.TransformPoint(Vector3.zero);
             rect.SetParent(cell, false);
             SnapTileToCell(rect, cell);
+            ApplySprite(tile, tile.Value); // ensure correct sprite after resize
             if (verboseAlignmentDebug)
             {
                 Vector3 postReparentWorld = rect.TransformPoint(Vector3.zero);
@@ -428,6 +428,13 @@ public class TileSystem : MonoBehaviour
         tile.gameObject.SetActive(false);
         tile.transform.SetParent(tileContainer, false);
         _pool.Enqueue(tile);
+    }
+
+    private void ApplySprite(TileView tile, int value)
+    {
+        if (tile == null || brickSet == null) return;
+        var sprite = brickSet.GetSprite(value);
+        if (sprite != null) tile.SetSprite(sprite);
     }
 }
 

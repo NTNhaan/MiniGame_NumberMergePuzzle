@@ -5,6 +5,18 @@ public class TileView : MonoBehaviour
 {
     [SerializeField] private Image background;
     [SerializeField] private Text valueText;
+    [Header("Sprite Options")]
+    [SerializeField] private bool useSpriteNativeSize = false;
+    private Vector2 _initialSize;
+
+    private void Awake()
+    {
+        if (background != null)
+        {
+            var rt = background.rectTransform;
+            _initialSize = rt.sizeDelta;
+        }
+    }
 
     public int Value { get; private set; }
     public int X { get; private set; }
@@ -18,5 +30,22 @@ public class TileView : MonoBehaviour
         if (background != null) background.color = color;
         if (valueText != null) valueText.text = value.ToString();
         name = $"Tile_{value}_{x}_{y}";
+    }
+
+    public void SetSprite(Sprite s)
+    {
+        if (background == null || s == null) return;
+        var rt = background.rectTransform;
+        Vector2 prevSize = rt.sizeDelta;
+        background.sprite = s;
+        if (useSpriteNativeSize)
+        {
+            background.SetNativeSize();
+        }
+        else
+        {
+            if (_initialSize != Vector2.zero)
+                rt.sizeDelta = prevSize == Vector2.zero ? _initialSize : prevSize;
+        }
     }
 }
