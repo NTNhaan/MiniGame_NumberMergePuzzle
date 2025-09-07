@@ -8,16 +8,13 @@ namespace Audio
     {
         public enum Name
         {
-            Music_MainScene,
             Music_GamePlay,
-            Sound_Click,
             Sound_GameOver,
-            Sound_PopupClose,
-            Sound_PopupOpen,
-            Sound_Smash,  // Hit
-            Sound_ReachSand,
-            Sound_OnDrag,
-            Sound_Dask,
+            Sound_Merge,
+            Sound_LevelUp,
+            Sound_Open_Close_Popup,
+            Sound_PutDown_Shape,
+            Sound_Btn_Click
         }
 
         public Name name;

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 using Data;
 public class MainScene : SceneBase
 {
-    
+
     [Header("=====HightScore MainScene=====")]
     [SerializeField] private Text hightScoreText;
     void Start()
@@ -16,9 +16,7 @@ public class MainScene : SceneBase
         int hightScore = DBController.Instance.BEST_SCORE;
         hightScoreText.text = hightScore.ToString();
         SettingCtrl.Instance.InitSetting();
-        AudioController.Instance.PlayPopupOpenSound();
-        Debug.Log("CheclkScene audio main scene");
-        AudioController.Instance.PlayBackroundMusicMainScene();
+        AudioController.Instance.PlayOpenClosePopup();
     }
     #region Override Methods
     public override void ShowScreen(UnityAction onComplete)
@@ -42,7 +40,7 @@ public class MainScene : SceneBase
     //     txtCoin.text = $"{DBController.Instance.COIN}";
     // }
     #endregion
-    
+
     public void ClickStartButton()
     {
         AudioController.Instance.PlaySoundButtonClick();

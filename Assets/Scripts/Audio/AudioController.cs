@@ -36,55 +36,34 @@ namespace Audio
         }
         #endregion
 
-
-        public void PlayBackroundMusicMainScene()
+        public void PlayBackroundMusicGameplay()
         {
             SetVolumeMusic(true);
             arrBackgroundMusic.source.Play();
-            StopEffect(Sound.Name.Music_GamePlay);
-        }
-        public void PlayBackroundMusicGameplay()
-        {
-            PlayEffect(Sound.Name.Music_GamePlay);
-            arrBackgroundMusic.source.Stop();
-        }
-        public void PlayMusicMainScene()
-        {
-            PlayEffect(Sound.Name.Music_MainScene);
         }
         public void PlayGameOverSound()
         {
             PlayEffect(Sound.Name.Sound_GameOver);
         }
-
-        public void PlayHitSound()
+        public void PlayMergeSound()
         {
-            PlayEffect(Sound.Name.Sound_Smash);
+            PlayEffect(Sound.Name.Sound_Merge);
         }
-        public void PlayPopupOpenSound()
+        public void PlayLevelUpSound()
         {
-            Debug.Log("[SoundManager] PlayPopupOpenSound");
-            PlayEffect(Sound.Name.Sound_PopupOpen);
+            PlayEffect(Sound.Name.Sound_LevelUp);
         }
-        public void PlayPopupCloseSound()
+        public void PlayOpenClosePopup()
         {
-            PlayEffect(Sound.Name.Sound_PopupClose);
+            PlayEffect(Sound.Name.Sound_Open_Close_Popup);
+        }
+        public void PlayPutDownShape()
+        {
+            PlayEffect(Sound.Name.Sound_PutDown_Shape);
         }
         public void PlaySoundButtonClick()
         {
-            PlayEffect(Sound.Name.Sound_Click);
-        }
-        public void PlaySoundDask()
-        {
-            PlayEffect(Sound.Name.Sound_Dask);
-        }
-        public void PlaySoundDrag()
-        {
-            PlayEffect(Sound.Name.Sound_OnDrag);
-        }
-        public void PlaySoundReachSand()
-        {
-            PlayEffect(Sound.Name.Sound_ReachSand);
+            PlayEffect(Sound.Name.Sound_Btn_Click);
         }
         #region FunctionPlaySound
         public void PlayEffect(Sound.Name name)
@@ -136,17 +115,17 @@ namespace Audio
         }
         public void DefaultVibration()
         {
-            if(DBController.Instance.VIBRATE)
+            if (DBController.Instance.VIBRATE)
                 HapticFeedback.LightFeedback();
         }
         private void MediumVibration()
         {
-            if(DBController.Instance.VIBRATE)
+            if (DBController.Instance.VIBRATE)
                 HapticFeedback.MediumFeedback();
         }
         private void HeavyVibration()
         {
-            if(DBController.Instance.VIBRATE)
+            if (DBController.Instance.VIBRATE)
                 HapticFeedback.HeavyFeedback();
         }
         public void RunVibration(float intensity = 1f, int milliseconds = 50)

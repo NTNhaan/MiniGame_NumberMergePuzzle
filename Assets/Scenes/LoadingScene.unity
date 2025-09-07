@@ -827,53 +827,38 @@ MonoBehaviour:
   dontDestroyOnLoad: 1
   arrBackgroundMusic:
     name: 0
-    clip: {fileID: 8300000, guid: 2e015d24f3c081449b59a6cf25f00cea, type: 3}
+    clip: {fileID: 8300000, guid: e5209ee57846d1d42ad510df5ac663d3, type: 3}
     volume: 0.5
     source: {fileID: 0}
     loop: 1
   arrSoundEffect:
   - name: 1
-    clip: {fileID: 8300000, guid: 7885d523c997b1f4cb43b5a68d5d3fb9, type: 3}
+    clip: {fileID: 8300000, guid: cc6532c1047ed6e4283ac6d0a84e4057, type: 3}
     volume: 0.5
     source: {fileID: 0}
     loop: 1
   - name: 2
-    clip: {fileID: 8300000, guid: b8b12231cd75a584184c92f28a329fa4, type: 3}
+    clip: {fileID: 8300000, guid: b586ea40681046447a6b82c22a1c0b30, type: 3}
     volume: 1
     source: {fileID: 0}
     loop: 0
   - name: 3
-    clip: {fileID: 8300000, guid: 9a7b9ed8c11bf0b4f8d314d13ad25840, type: 3}
+    clip: {fileID: 8300000, guid: a57220bcaaaa4a3499e5f2ba6579ee6f, type: 3}
     volume: 1
     source: {fileID: 0}
     loop: 0
   - name: 4
-    clip: {fileID: 8300000, guid: b188e52c15103944eb638234a1620f77, type: 3}
+    clip: {fileID: 8300000, guid: 140ba74179a108e46a418c39ee17f203, type: 3}
     volume: 1
     source: {fileID: 0}
     loop: 0
   - name: 5
-    clip: {fileID: 8300000, guid: 3b625555ac6602d4ca80b111b20656c9, type: 3}
+    clip: {fileID: 8300000, guid: 44e7e92b2823fda4c9a2571bba742de5, type: 3}
     volume: 1
     source: {fileID: 0}
     loop: 0
   - name: 6
-    clip: {fileID: 8300000, guid: c0f036bb1a91f0e4eb9058461f821f88, type: 3}
-    volume: 1
-    source: {fileID: 0}
-    loop: 0
-  - name: 8
-    clip: {fileID: 8300000, guid: 6e5fb18cf8bf9384b929656f0bb7a601, type: 3}
-    volume: 1
-    source: {fileID: 0}
-    loop: 0
-  - name: 7
-    clip: {fileID: 8300000, guid: f31d48147f7819f46967b86d4ddde1df, type: 3}
-    volume: 1
-    source: {fileID: 0}
-    loop: 0
-  - name: 9
-    clip: {fileID: 8300000, guid: bd1b6a521d33fc5449c197298024e276, type: 3}
+    clip: {fileID: 8300000, guid: b8b12231cd75a584184c92f28a329fa4, type: 3}
     volume: 1
     source: {fileID: 0}
     loop: 0

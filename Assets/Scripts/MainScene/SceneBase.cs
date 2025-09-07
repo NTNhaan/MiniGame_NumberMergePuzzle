@@ -26,7 +26,7 @@ public class SceneBase : MonoBehaviour
 
     public virtual void ShowScreen(UnityAction onComplete = null)
     {
-        AudioController.Instance.PlayPopupOpenSound();
+        AudioController.Instance.PlayOpenClosePopup();
         if (gobjPanels != null)
         {
             foreach (var panel in gobjPanels)
@@ -54,7 +54,7 @@ public class SceneBase : MonoBehaviour
     }
     public virtual void HideScreen(UnityAction onComplete = null)
     {
-        AudioController.Instance.PlayPopupCloseSound();
+        AudioController.Instance.PlayOpenClosePopup();
         if (anims != null)
         {
             foreach (var animator in anims)
@@ -86,7 +86,7 @@ public class SceneBase : MonoBehaviour
             animTransition.SetBool("isStransition", false);
         }
     }
-   public void ShowTransition()
+    public void ShowTransition()
     {
         Debug.Log("Show transition");
         if (animTransition != null)
@@ -95,7 +95,7 @@ public class SceneBase : MonoBehaviour
             animTransition.SetBool("isStransition", true);
         }
     }
-   
+
     public virtual void LoadUI()
     {
         // txtCoin.text = DBController.Instance.COIN.ToString("n0");
