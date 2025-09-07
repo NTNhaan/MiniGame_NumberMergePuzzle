@@ -44,15 +44,17 @@ public class MainScene : SceneBase
     public void ClickStartButton()
     {
         AudioController.Instance.PlaySoundButtonClick();
-        if (!DBController.Instance.TUTORIAL_COMPLETED)
-        {
-            SceneManager.LoadScene("TutorialScene");
-        }
-        else
-        {
-            InGameData.GAME_STATE = GameState.GamePlay;
-            SceneManager.LoadScene("GamePlayScene");
-        }
+        InGameData.GAME_STATE = GameState.GamePlay;
+        SceneManager.LoadScene("GamePlayScene");
+        // if (!DBController.Instance.TUTORIAL_COMPLETED)
+        // {
+        //     SceneManager.LoadScene("TutorialScene");
+        // }
+        // else
+        // {
+        //     InGameData.GAME_STATE = GameState.GamePlay;
+        //     SceneManager.LoadScene("GamePlayScene");
+        // }
     }
     public void ClickSoundButton()
     {
