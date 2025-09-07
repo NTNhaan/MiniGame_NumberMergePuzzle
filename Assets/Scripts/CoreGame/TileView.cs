@@ -48,4 +48,18 @@ public class TileView : MonoBehaviour
                 rt.sizeDelta = prevSize == Vector2.zero ? _initialSize : prevSize;
         }
     }
+
+    public void UpdateValue(int newValue)
+    {
+        Value = newValue;
+        if (valueText != null) valueText.text = newValue.ToString();
+        name = $"Tile_{newValue}_{X}_{Y}";
+    }
+
+    public void SetGridPosition(int newX, int newY)
+    {
+        X = newX;
+        Y = newY;
+        name = $"Tile_{Value}_{X}_{Y}";
+    }
 }

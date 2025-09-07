@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5828068489451649527}
   - component: {fileID: 3797955577684407738}
   - component: {fileID: 7171654735056170618}
+  - component: {fileID: 869238186458377357}
   m_Layer: 5
   m_Name: text
   m_TagString: Untagged
@@ -35,7 +36,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -34, y: -34}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3797955577684407738
 CanvasRenderer:
@@ -58,7 +59,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -67,18 +68,33 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: 1818933f47805514d8a90f11d861c51c, type: 3}
-    m_FontSize: 64
+    m_FontSize: 115
     m_FontStyle: 0
     m_BestFit: 1
     m_MinSize: 10
-    m_MaxSize: 64
+    m_MaxSize: 115
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 1
+  m_Text: 11111111
+--- !u!114 &869238186458377357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2812349408889283028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0.16862746, g: 0.47058827, b: 0.1254902, a: 1}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!1 &5792981671513082918
 GameObject:
   m_ObjectHideFlags: 0
@@ -146,7 +162,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2914995515826552882, guid: 10f530dfcfc866f48b1c63adb6cfa2b2, type: 3}
+  m_Sprite: {fileID: -3093795626333497649, guid: c1afa3cf6066ff8458acd67436d066be, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -170,3 +186,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   background: {fileID: 5751740835846755892}
   valueText: {fileID: 7171654735056170618}
+  useSpriteNativeSize: 0

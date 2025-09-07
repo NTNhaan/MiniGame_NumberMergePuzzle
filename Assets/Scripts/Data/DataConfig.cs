@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Chứa các hằng số / cấu hình tĩnh của gameplay. Thay đổi tại đây (hoặc tạo UI Editor riêng) để áp dụng cho toàn bộ hệ thống.
-/// Không lưu dữ liệu phát sinh hoặc cần lưu lâu dài (dùng InGameData / DBController).
-/// </summary>
 public static class DataConfig
 {
     // GRID -------------------------------------------------
@@ -21,7 +17,7 @@ public static class DataConfig
     public const float QUEUE_ACTIVE_SCALE = 1f;
     public const float QUEUE_INACTIVE_SCALE = 1f;
     public const float QUEUE_SCALE_LERP_SPEED = 12f;
-    public const float QUEUE_ACTIVE_Y_OFFSET = -5f;
+    public const float QUEUE_ACTIVE_Y_OFFSET = 10f;
     public const float QUEUE_NEW_ITEM_POP_DURATION = 0.2f;
 
     // TILE SPAWN ANIMATION ---------------------------------

@@ -120,7 +120,6 @@ public class GridController : MonoBehaviour
                         -y * (cellSize.y + spacing.y)
                     );
                 }
-                // Gắn script GridCell để lưu toạ độ + click
                 var cellComp = go.GetComponent<GridCell>();
                 if (cellComp == null) cellComp = go.AddComponent<GridCell>();
                 cellComp.Init(x, y, this);
@@ -161,17 +160,15 @@ public class GridController : MonoBehaviour
     {
         bool hadListeners = OnColumnSelected != null;
         OnColumnSelected?.Invoke(cell.X);
-        Debug.Log($"[GridController] Click column {cell.X} (type {cell.ColumnType}) listeners={(hadListeners ? OnColumnSelected.GetInvocationList().Length : 0)}");
 
         if (!hadListeners && autoSpawnOnClick && autoSpawnQueue != null)
         {
             bool ok = autoSpawnQueue.SpawnIntoColumn(cell.X);
-            if (debugAuto) Debug.Log($"[GridController] Fallback auto spawn column {cell.X} result={ok}");
         }
-        else if (!hadListeners && autoSpawnOnClick && autoSpawnQueue == null && debugAuto)
-        {
-            Debug.LogWarning("[GridController] No listeners & no autoSpawnQueue reference. Cannot spawn.");
-        }
+        // else if (!hadListeners && autoSpawnOnClick && autoSpawnQueue == null && debugAuto)
+        // {
+        //     Debug.LogWarning("[GridController] No listeners & no autoSpawnQueue reference. Cannot spawn.");
+        // }
     }
 
 #if UNITY_EDITOR

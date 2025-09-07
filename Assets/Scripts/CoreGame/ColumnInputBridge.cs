@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Kết nối sự kiện chọn cột từ GridController tới SpawnQueue.
-/// Gắn script này trong scene, tham chiếu GridController & SpawnQueue.
-/// </summary>
 public class ColumnInputBridge : MonoBehaviour
 {
     [SerializeField] private GridController gridController;
@@ -21,7 +17,6 @@ public class ColumnInputBridge : MonoBehaviour
         if (gridController != null)
         {
             gridController.OnColumnSelected += HandleColumnSelected;
-            if (debugLog) Debug.Log("[ColumnInputBridge] Subscribed to OnColumnSelected");
         }
     }
 
@@ -30,7 +25,6 @@ public class ColumnInputBridge : MonoBehaviour
         if (gridController != null)
         {
             gridController.OnColumnSelected -= HandleColumnSelected;
-            if (debugLog) Debug.Log("[ColumnInputBridge] Unsubscribed from OnColumnSelected");
         }
     }
 
@@ -38,6 +32,5 @@ public class ColumnInputBridge : MonoBehaviour
     {
         if (spawnQueue == null) return;
         bool ok = spawnQueue.SpawnIntoColumn(column);
-        if (debugLog) Debug.Log($"[ColumnInputBridge] SpawnIntoColumn({column}) result={ok}");
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DefaultNamespace; // ScoreController
 
 public class TileSystem : MonoBehaviour
 {
@@ -9,7 +10,7 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private TileView tilePrefab;
     [SerializeField] private Transform tileContainer;
     [Header("Brick Data")]
-    [SerializeField] private BrickSet brickSet; 
+    [SerializeField] private BrickSet brickSet;
 
     [Header("Pool Settings")]
     [SerializeField] private int preloadCount = 20;
@@ -20,9 +21,54 @@ public class TileSystem : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool enableDebug = true;
 
+    [Header("Scoring")]
+    [SerializeField] private bool addScoreOnMerge = true;
+    [SerializeField] private ScoreAwardMode scoreMode = ScoreAwardMode.NewValue;
+    [SerializeField] private int clusterBonusMultiplier = 0;
+
+    private enum ScoreAwardMode
+    {
+        NewValue,
+        GainedValue,
+        BaseValueTimesCluster,
+        SumOfMergedTiles
+    }
+
     public GridController Grid => gridController;
 
 
+    #region Animated Spawn
+    [Header("Animation")]
+    [SerializeField] private float moveDuration = DataConfig.TILE_MOVE_DURATION;
+    [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    private bool _isAnimatingSpawn;
+    private bool _isMerging;
+
+    [Header("Tile Layout In Cell")]
+    [SerializeField] private bool centerTileInCell = true;
+    [SerializeField] private bool resizeToCell = false;
+    [SerializeField] private Vector2 sizePadding = new Vector2(8, 8);
+
+    [Header("Spawn Path")]
+    [SerializeField] private bool verticalFromBelow = DataConfig.TILE_VERTICAL_FROM_BELOW;
+    [SerializeField] private float fallbackBelowOffset = 120f;
+    [SerializeField] private bool startAtColumnBottom = DataConfig.TILE_START_AT_COLUMN_BOTTOM;
+    [SerializeField] private bool constantSpeed = DataConfig.TILE_CONSTANT_SPEED;
+    [SerializeField] private float pixelsPerSecond = DataConfig.TILE_PIXELS_PER_SECOND;
+    [SerializeField] private float minDuration = DataConfig.TILE_MIN_DURATION;
+    [SerializeField] private float maxDuration = DataConfig.TILE_MAX_DURATION;
+
+    [Header("Queue -> Column Transition")]
+    [SerializeField] private bool twoPhaseFromQueue = DataConfig.TILE_TWO_PHASE_FROM_QUEUE;
+    [Range(0.1f, 0.9f)][SerializeField] private float firstPhasePortion = 0.35f;
+
+    [Header("Alignment Fixes")]
+    [SerializeField] private bool forcePureVertical = DataConfig.TILE_FORCE_PURE_VERTICAL;
+    [SerializeField] private bool verboseAlignmentDebug = false;
+    [Header("Two-Phase Variants")]
+    [SerializeField] private bool lShapeTwoPhase = DataConfig.TILE_L_SHAPE_TWO_PHASE;
+    [SerializeField] private bool preserveQueueStart = DataConfig.TILE_PRESERVE_QUEUE_START;
+    [SerializeField] private bool useRootCanvasForQueueStart = DataConfig.TILE_USE_ROOT_CANVAS_FOR_QUEUE_START;
     private void Awake()
     {
         if (gridController == null)
@@ -63,6 +109,8 @@ public class TileSystem : MonoBehaviour
             }
             if (!peek.gameObject.activeSelf)
                 peek.gameObject.SetActive(true);
+            if (peek.transform.localScale.sqrMagnitude < 0.0001f)
+                peek.transform.localScale = Vector3.one;
             return peek;
         }
         var extra = Instantiate(tilePrefab, tileContainer);
@@ -92,44 +140,8 @@ public class TileSystem : MonoBehaviour
         return tile;
     }
 
-    #region Animated Spawn
-    [Header("Animation")]
-    [SerializeField] private float moveDuration = DataConfig.TILE_MOVE_DURATION;
-    [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-    private bool _isAnimatingSpawn;
-
-    [Header("Tile Layout In Cell")]
-    [SerializeField] private bool centerTileInCell = true;
-    [SerializeField] private bool resizeToCell = false;
-    [SerializeField] private Vector2 sizePadding = new Vector2(8, 8);
-
-    [Header("Spawn Path")]
-    [SerializeField] private bool verticalFromBelow = DataConfig.TILE_VERTICAL_FROM_BELOW;
-    [SerializeField] private float fallbackBelowOffset = 120f;
-    [SerializeField] private bool startAtColumnBottom = DataConfig.TILE_START_AT_COLUMN_BOTTOM;
-    [SerializeField] private bool constantSpeed = DataConfig.TILE_CONSTANT_SPEED;
-    [SerializeField] private float pixelsPerSecond = DataConfig.TILE_PIXELS_PER_SECOND;
-    [SerializeField] private float minDuration = DataConfig.TILE_MIN_DURATION;
-    [SerializeField] private float maxDuration = DataConfig.TILE_MAX_DURATION;
-
-    [Header("Queue -> Column Transition")]
-    [SerializeField] private bool twoPhaseFromQueue = DataConfig.TILE_TWO_PHASE_FROM_QUEUE;
-    [Range(0.1f, 0.9f)][SerializeField] private float firstPhasePortion = 0.35f;
-
-    [Header("Alignment Fixes")]
-    [SerializeField] private bool forcePureVertical = DataConfig.TILE_FORCE_PURE_VERTICAL;
-    [SerializeField] private bool verboseAlignmentDebug = false;
-    [Header("Two-Phase Variants")]
-    [SerializeField] private bool lShapeTwoPhase = DataConfig.TILE_L_SHAPE_TWO_PHASE;
-    [SerializeField] private bool preserveQueueStart = DataConfig.TILE_PRESERVE_QUEUE_START;
-    [SerializeField] private bool useRootCanvasForQueueStart = DataConfig.TILE_USE_ROOT_CANVAS_FOR_QUEUE_START;
-
     public bool SpawnTileAnimatedFromQueue(int column, int value, Color color, RectTransform startRect)
     {
-        if (_isAnimatingSpawn) { DebugLog("SpawnTileAnimatedFromQueue blocked: đang có animation."); return false; }
-        if (gridController == null) { DebugLog("SpawnTileAnimatedFromQueue FAIL: gridController = null"); return false; }
-        if (column < 0 || column >= gridController.Columns) { DebugLog($"SpawnTileAnimatedFromQueue FAIL: column {column} ngoài biên."); return false; }
-
         int targetRow = -1;
         if (startAtColumnBottom)
         {
@@ -145,10 +157,7 @@ public class TileSystem : MonoBehaviour
                 if (IsEmpty(column, y)) { targetRow = y; break; }
             }
         }
-        if (targetRow == -1) { DebugLog($"SpawnTileAnimatedFromQueue FAIL: cột {column} đầy."); return false; }
-
         var cell = gridController.GetCell(column, targetRow);
-        if (cell == null) { DebugLog($"SpawnTileAnimatedFromQueue FAIL: không tìm thấy cell ({column},{targetRow})."); return false; }
 
         var tile = GetFromPool();
         tile.Initialize(value, color, column, targetRow);
@@ -167,13 +176,8 @@ public class TileSystem : MonoBehaviour
 
         var tileRect = (RectTransform)tile.transform;
 
-        if (startRect == null)
+        if (startRect.Equals(null))
         {
-            DebugLog("startRect null -> dùng tileContainer làm gốc.");
-        }
-        else if (startRect.Equals(null))
-        {
-            DebugLog("startRect reference đã bị destroy (MissingReference). Fallback spawn trực tiếp không anim.");
             tile.transform.SetParent(cell, false);
             tile.Initialize(value, color, column, targetRow);
             _tiles[(column, targetRow)] = tile;
@@ -290,7 +294,6 @@ public class TileSystem : MonoBehaviour
 
         while (t < 1f)
         {
-            if (tile == null || rect == null) { DebugLog("Anim aborted: tile bị destroy giữa chừng."); yield break; }
             t += Time.unscaledDeltaTime / duration;
             float clampedT = Mathf.Clamp01(t);
             float ease = moveCurve.Evaluate(clampedT);
@@ -350,7 +353,7 @@ public class TileSystem : MonoBehaviour
             Vector3 preReparentWorld = rect.TransformPoint(Vector3.zero);
             rect.SetParent(cell, false);
             SnapTileToCell(rect, cell);
-            ApplySprite(tile, tile.Value); // ensure correct sprite after resize
+            ApplySprite(tile, tile.Value);
             if (verboseAlignmentDebug)
             {
                 Vector3 postReparentWorld = rect.TransformPoint(Vector3.zero);
@@ -373,7 +376,6 @@ public class TileSystem : MonoBehaviour
             if (verboseAlignmentDebug)
             {
                 Vector3 finalWorld = rect.TransformPoint(Vector3.zero);
-                DebugLog($"[ALIGN] Finished tile({x},{y}) finalWorld={finalWorld} targetWorld={worldTarget} deltaWorld={(finalWorld - worldTarget)}");
             }
         }
         _isAnimatingSpawn = false;
@@ -404,6 +406,224 @@ public class TileSystem : MonoBehaviour
             Debug.Log($"[TileSystem] {msg}");
     }
 
+    private void OnEnable()
+    {
+        EventManager.OnTileSpawnAnimationComplete += HandleTileSpawnedForMerge;
+    }
+
+    private void OnDisable()
+    {
+        EventManager.OnTileSpawnAnimationComplete -= HandleTileSpawnedForMerge;
+    }
+
+    private void HandleTileSpawnedForMerge(int x, int y)
+    {
+        var tile = GetTile(x, y);
+        if (tile == null) return;
+        int value = tile.Value;
+        var cluster = CollectClusterDFS(x, y, value);
+        if (cluster.Count < 2) return;
+        if (_isMerging) return;
+        StartCoroutine(MergeClusterChain(tile));
+    }
+
+    private List<(int x, int y)> CollectClusterDFS(int sx, int sy, int targetValue)
+    {
+        var results = new List<(int x, int y)>();
+        var visited = new HashSet<(int, int)>();
+        void DFS(int cx, int cy)
+        {
+            if (!IsInside(cx, cy)) return;
+            if (visited.Contains((cx, cy))) return;
+            var t = GetTile(cx, cy);
+            if (t == null || t.Value != targetValue) return;
+            visited.Add((cx, cy));
+            results.Add((cx, cy));
+            DFS(cx + 1, cy);
+            DFS(cx - 1, cy);
+            DFS(cx, cy + 1);
+            DFS(cx, cy - 1);
+        }
+        DFS(sx, sy);
+        return results;
+    }
+
+    private System.Collections.IEnumerator MergeClusterChain(TileView baseTile)
+    {
+        if (baseTile == null) yield break;
+        _isMerging = true;
+        int safety = 64;
+        while (safety-- > 0)
+        {
+            var cluster = CollectClusterDFS(baseTile.X, baseTile.Y, baseTile.Value);
+            if (cluster.Count < 2) break;
+            TileView anchor = baseTile;
+            foreach (var pos in cluster)
+            {
+                if (_tiles.TryGetValue((pos.x, pos.y), out var cand) && cand != null)
+                {
+                    bool better = false;
+                    if (cand.Y > anchor.Y) better = true;
+                    else if (cand.Y == anchor.Y && cand.X < anchor.X) better = true;
+                    if (better) anchor = cand;
+                }
+            }
+            if (anchor != baseTile)
+            {
+                baseTile = anchor;
+            }
+            var anchorRect = (RectTransform)anchor.transform;
+            Vector3 anchorPos = anchorRect.position;
+            float absorbDuration = 0.18f;
+            var movers = new List<RectTransform>();
+            var startScale = new Dictionary<RectTransform, Vector3>();
+            var startPos = new Dictionary<RectTransform, Vector3>();
+            foreach (var pos in cluster)
+            {
+                if (_tiles.TryGetValue((pos.x, pos.y), out var tv) && tv != null)
+                {
+                    var r = (RectTransform)tv.transform;
+                    startScale[r] = r.localScale;
+                    startPos[r] = r.position;
+                    if (tv != anchor) movers.Add(r);
+                }
+            }
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / absorbDuration;
+                float e = Mathf.SmoothStep(0, 1, Mathf.Clamp01(t));
+                float pulse = Mathf.Sin(e * Mathf.PI);
+                anchorRect.localScale = Vector3.Lerp(startScale[anchorRect], startScale[anchorRect] * 1.15f, pulse);
+                foreach (var r in movers)
+                {
+                    if (r == null) continue;
+                    Vector3 s = startPos[r];
+                    Vector3 target = anchorPos;
+                    Vector3 mid1 = s;
+                    Vector3 mid2 = s;
+                    bool sameX = Mathf.Abs(s.x - target.x) < 0.01f;
+                    bool sameY = Mathf.Abs(s.y - target.y) < 0.01f;
+                    Vector3 newPos;
+                    if (sameX || sameY)
+                    {
+                        newPos = Vector3.Lerp(s, target, e);
+                    }
+                    else
+                    {
+                        float split = 0.5f;
+                        if (e < split)
+                        {
+                            float lerp1 = e / split;
+                            float nx = Mathf.Lerp(s.x, target.x, lerp1);
+                            newPos = new Vector3(nx, s.y, s.z);
+                        }
+                        else
+                        {
+                            float lerp2 = (e - split) / (1f - split);
+                            float ny = Mathf.Lerp(s.y, target.y, lerp2);
+                            newPos = new Vector3(target.x, ny, s.z);
+                        }
+                    }
+                    r.position = newPos;
+                    r.localScale = Vector3.Lerp(startScale[r], Vector3.zero, e);
+                }
+                yield return null;
+            }
+            anchorRect.position = anchorPos;
+            anchorRect.localScale = startScale[anchorRect];
+            foreach (var pos in cluster)
+            {
+                if (pos.x == anchor.X && pos.y == anchor.Y) continue;
+                if (_tiles.TryGetValue((pos.x, pos.y), out var mergeTile) && mergeTile != null)
+                {
+                    _tiles.Remove((pos.x, pos.y));
+                    ReturnToPool(mergeTile);
+                }
+            }
+            int oldValue = anchor.Value;
+            int newValue = oldValue * 2;
+            anchor.UpdateValue(newValue);
+            ApplySprite(anchor, newValue);
+            if (addScoreOnMerge)
+            {
+                AwardScore(oldValue, newValue, cluster.Count);
+            }
+
+            yield return MoveTileUpwards(anchor);
+            yield return null;
+        }
+        _isMerging = false;
+    }
+
+    private int GetHighestEmptyRow(int col)
+    {
+        for (int y = 0; y < gridController.Rows; y++)
+        {
+            if (!_tiles.ContainsKey((col, y))) return y;
+        }
+        return -1;
+    }
+
+    private System.Collections.IEnumerator MoveTileUpwards(TileView tile)
+    {
+        if (tile == null) yield break;
+        int currentY = tile.Y;
+        int targetY = GetHighestEmptyRow(tile.X);
+        if (targetY < 0 || targetY >= currentY) yield break;
+        _tiles.Remove((tile.X, currentY));
+        _tiles[(tile.X, targetY)] = tile;
+        tile.SetGridPosition(tile.X, targetY);
+        var targetCell = gridController.GetCell(tile.X, targetY);
+        if (targetCell != null)
+        {
+            var rect = (RectTransform)tile.transform;
+            Vector3 start = rect.position;
+            Vector3 end = targetCell.TransformPoint(targetCell.rect.center);
+            float moveT = 0f; float moveDur = 0.22f;
+            while (moveT < 1f)
+            {
+                moveT += Time.unscaledDeltaTime / moveDur;
+                float ee = Mathf.SmoothStep(0, 1, Mathf.Clamp01(moveT));
+                rect.position = Vector3.Lerp(start, end, ee);
+                yield return null;
+            }
+            rect.SetParent(targetCell, false);
+            SnapTileToCell(rect, targetCell);
+        }
+    }
+
+    public void MergeAllClustersFullPass()
+    {
+        if (_isMerging) return;
+        StartCoroutine(MergeAllClustersCoroutine());
+    }
+
+    private System.Collections.IEnumerator MergeAllClustersCoroutine()
+    {
+        _isMerging = true;
+        bool changed;
+        int safety = 128;
+        do
+        {
+            changed = false;
+            var keys = new List<(int x, int y)>(_tiles.Keys);
+            foreach (var k in keys)
+            {
+                if (!_tiles.ContainsKey(k)) continue;
+                var tile = _tiles[k];
+                if (tile == null) continue;
+                var cluster = CollectClusterDFS(tile.X, tile.Y, tile.Value);
+                if (cluster.Count < 2) continue;
+                yield return MergeClusterChain(tile);
+                changed = true;
+                break;
+            }
+            yield return null;
+        } while (changed && safety-- > 0);
+        _isMerging = false;
+    }
+
     public bool IsInside(int x, int y) => x >= 0 && x < gridController.Columns && y >= 0 && y < gridController.Rows;
 
     public bool IsEmpty(int x, int y) => !_tiles.ContainsKey((x, y));
@@ -427,6 +647,7 @@ public class TileSystem : MonoBehaviour
     {
         tile.gameObject.SetActive(false);
         tile.transform.SetParent(tileContainer, false);
+        tile.transform.localScale = Vector3.one;
         _pool.Enqueue(tile);
     }
 
@@ -435,6 +656,33 @@ public class TileSystem : MonoBehaviour
         if (tile == null || brickSet == null) return;
         var sprite = brickSet.GetSprite(value);
         if (sprite != null) tile.SetSprite(sprite);
+    }
+
+    private void AwardScore(int oldValue, int newValue, int clusterSize)
+    {
+        if (ScoreController.Instance == null) return;
+        int points = 0;
+        switch (scoreMode)
+        {
+            case ScoreAwardMode.NewValue:
+                points = newValue;
+                break;
+            case ScoreAwardMode.GainedValue:
+                points = newValue - oldValue;
+                break;
+            case ScoreAwardMode.BaseValueTimesCluster:
+                points = oldValue * clusterSize;
+                break;
+            case ScoreAwardMode.SumOfMergedTiles:
+                points = oldValue * clusterSize;
+                break;
+        }
+        if (clusterBonusMultiplier > 0 && clusterSize > 1)
+        {
+            points += (clusterSize - 1) * clusterBonusMultiplier;
+        }
+        if (points > 0)
+            ScoreController.Instance.AddPoints(points);
     }
 }
 

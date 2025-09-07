@@ -1,14 +1,11 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// Đại diện 1 ô grid hiển thị (chỉ cell nền). Lưu toạ độ và chuyển click cho GridController.
-/// </summary>
 public class GridCell : MonoBehaviour, IPointerClickHandler
 {
     public int X { get; private set; }
     public int Y { get; private set; }
-    public string ColumnType { get; private set; } // Ví dụ: Column1, Column2...
+    public string ColumnType { get; private set; }
 
     private GridController _controller;
 
@@ -17,7 +14,7 @@ public class GridCell : MonoBehaviour, IPointerClickHandler
         X = x;
         Y = y;
         _controller = controller;
-        ColumnType = $"Column{X + 1}"; // human-friendly (1-based)
+        ColumnType = $"Column{X + 1}";
         gameObject.name = $"Cell_{X}_{Y}_{ColumnType}";
     }
 
