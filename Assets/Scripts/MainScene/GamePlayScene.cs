@@ -1,6 +1,5 @@
 using UnityEngine;
 using Audio;
-using UnityEngine;
 using UnityEngine.Events;
 using Cysharp.Threading.Tasks;
 using Setting;
