@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Audio;
 using DefaultNamespace;
 using UnityEngine;
-using  UnityEngine.UI;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms.Impl;
 using Object = System.Object;
@@ -17,7 +17,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Text HealthPlayer;
     public Text PanelScoreText;
     public Text HighScoreText;
-    
+
     void Start()
     {
         ScoreController.Instance.OnScoreChanged += UpdateScoreText;
@@ -35,7 +35,7 @@ public class UIManager : MonoBehaviour
         HighScoreText.text = ScoreController.Instance.GetHighScore().ToString();
         // HealthPlayer.text = scoreManager.GetHealthPlayer().ToString();
     }
-    
+
     void UpdateScoreText(int score)
     {
         scoreText.text = ScoreController.Instance.Score.ToString();
@@ -43,7 +43,7 @@ public class UIManager : MonoBehaviour
 
     void UpdatePanelScoreText(int score)
     {
-        PanelScoreText.text = "Score: " +  ScoreController.Instance.Score;
+        // PanelScoreText.text = "Score: " +  ScoreController.Instance.Score;
     }
     void UpdateHealthPlayer(int health)
     {

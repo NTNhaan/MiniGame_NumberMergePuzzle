@@ -1,7 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using DefaultNamespace; // ScoreController
+using DefaultNamespace;
 
 public class TileSystem : MonoBehaviour
 {
@@ -26,6 +27,8 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private ScoreAwardMode scoreMode = ScoreAwardMode.NewValue;
     [SerializeField] private int clusterBonusMultiplier = 0;
 
+    [Header("Animator Character")]
+    [SerializeField] private Animator mewAnimator;
     private enum ScoreAwardMode
     {
         NewValue,
@@ -43,6 +46,8 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     private bool _isAnimatingSpawn;
     private bool _isMerging;
+    public bool Busy => _isAnimatingSpawn || _isMerging; // cho SpawnQueue kiểm tra khoá input
+    public bool IsBusy() => Busy; // giữ hàm cũ nếu đã serialize ở nơi khác
 
     [Header("Tile Layout In Cell")]
     [SerializeField] private bool centerTileInCell = true;
@@ -448,9 +453,9 @@ public class TileSystem : MonoBehaviour
         return results;
     }
 
-    private System.Collections.IEnumerator MergeClusterChain(TileView baseTile)
+    private IEnumerator MergeClusterChain(TileView baseTile)
     {
-        if (baseTile == null) yield break;
+        if (baseTile == null) yield break; // giữ kiểu coroutine nên yield break OK
         _isMerging = true;
         int safety = 64;
         while (safety-- > 0)
@@ -548,6 +553,10 @@ public class TileSystem : MonoBehaviour
             if (addScoreOnMerge)
             {
                 AwardScore(oldValue, newValue, cluster.Count);
+                if (mewAnimator != null)
+                {
+                    yield return PlaySmileAnimation("SmileAnim");
+                }
             }
 
             yield return MoveTileUpwards(anchor);
@@ -683,6 +692,38 @@ public class TileSystem : MonoBehaviour
         }
         if (points > 0)
             ScoreController.Instance.AddPoints(points);
+    }
+
+    // Chạy animation cười: set isSmile=true, đợi vào state rồi đợi state chạy xong mới set false
+    private IEnumerator PlaySmileAnimation(string stateName, float enterTimeout = 1.5f, float maxDuration = 3f)
+    {
+        if (mewAnimator == null) yield break;
+        mewAnimator.SetBool("isSmile", true);
+        float start = Time.unscaledTime;
+        // Đợi animator chuyển sang state
+        bool entered = false;
+        while (Time.unscaledTime - start < enterTimeout)
+        {
+            var info = mewAnimator.GetCurrentAnimatorStateInfo(0);
+            if (info.IsName(stateName)) { entered = true; break; }
+            yield return null; // chờ frame kế tiếp để state cập nhật
+        }
+        if (!entered)
+        {
+            DebugLog($"SmileAnim không vào state trong {enterTimeout}s");
+            mewAnimator.SetBool("isSmile", false);
+            yield break;
+        }
+        // Đợi state chạy hết (normalizedTime >=1) hoặc bị đổi sang state khác hoặc quá maxDuration
+        start = Time.unscaledTime;
+        while (Time.unscaledTime - start < maxDuration)
+        {
+            var info = mewAnimator.GetCurrentAnimatorStateInfo(0);
+            if (!info.IsName(stateName)) break; // state bị override
+            if (info.normalizedTime >= 1f && !info.loop) break;
+            yield return null;
+        }
+        mewAnimator.SetBool("isSmile", false);
     }
 }
 

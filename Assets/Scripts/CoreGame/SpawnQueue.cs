@@ -129,6 +129,10 @@ public class SpawnQueue : MonoBehaviour
 
     private bool _pendingQueueShift;
     private int _pendingInsertedValue;
+    // Lock để ngăn spam: chỉ cho spawn mới khi tile trước đã spawn + merge xong
+    [Header("Input Lock")]
+    [SerializeField] private bool lockDuringSpawnAndMerge = true;
+    private bool _inputLocked;
 
     private void BuildQueueSlots()
     {
@@ -217,6 +221,7 @@ public class SpawnQueue : MonoBehaviour
         if (!Application.isPlaying) return false;
         if (tileSystem == null || tileSystem.Grid == null) return false;
         if (column < 0 || column >= tileSystem.Grid.Columns) return false;
+        if (lockDuringSpawnAndMerge && _inputLocked) return false;
         if (_values.Count == 0) FillQueue();
         int value = 0;
         int originalCount = _values.Count;
@@ -250,6 +255,7 @@ public class SpawnQueue : MonoBehaviour
             RefreshVisuals();
             return false;
         }
+        if (lockDuringSpawnAndMerge) _inputLocked = true;
         _freezeHighlight = true;
         _pendingInsertedValue = GenerateValue();
         _pendingQueueShift = true;
@@ -275,6 +281,17 @@ public class SpawnQueue : MonoBehaviour
             RefreshVisuals();
         _freezeHighlight = false;
         SyncRuntimeQueue();
+        // Merge có thể đang chạy trong TileSystem. Chờ tới khi hệ thống báo xong để mở khoá.
+        if (lockDuringSpawnAndMerge)
+            StartCoroutine(WaitForMergeUnlock());
+    }
+
+    private System.Collections.IEnumerator WaitForMergeUnlock()
+    {
+        // Poll trạng thái TileSystem tới khi không còn merging + không còn spawn anim.
+        while (tileSystem != null && tileSystem.Busy)
+            yield return null; // chờ frame tiếp
+        _inputLocked = false;
     }
 
     private void OnDestroy()
