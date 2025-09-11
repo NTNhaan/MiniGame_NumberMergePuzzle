@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// ScriptableObject chứa danh sách các brick (number + sprite) thay cho mảng allowedValues.
-/// </summary>
 [CreateAssetMenu(menuName = "Config/Brick Set", fileName = "BrickSet")]
 public class BrickSet : ScriptableObject
 {

@@ -14,4 +14,9 @@ public static class EventManager
     public static void Initatata() => OnInitData?.Invoke();
     public static event UnityAction<int, int> OnTileSpawnAnimationComplete;
     public static void TileSpawnAnimationComplete(int x, int y) => OnTileSpawnAnimationComplete?.Invoke(x, y);
+    public static event UnityAction<int> OnMissionChange;
+    public static void MissionChanged(int mission) => OnMissionChange?.Invoke(mission);
+    // Khi một giá trị mới được merge lần đầu và được mở khoá để spawn
+    public static event UnityAction<int> OnSpawnValueUnlocked;
+    public static void SpawnValueUnlocked(int value) => OnSpawnValueUnlocked?.Invoke(value);
 }

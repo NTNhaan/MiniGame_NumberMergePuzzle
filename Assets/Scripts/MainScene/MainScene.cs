@@ -9,14 +9,54 @@ using Data;
 public class MainScene : SceneBase
 {
 
-    [Header("=====HightScore MainScene=====")]
-    [SerializeField] private Text hightScoreText;
+    [Header("=====Highest Block MainScene=====")]
+    [SerializeField] private Text highestBlockText;
+    [SerializeField] private Image highestBlockImg;
+
     void Start()
     {
-        int hightScore = DBController.Instance.BEST_SCORE;
-        hightScoreText.text = hightScore.ToString();
+        if (DBController.Instance != null && highestBlockText != null)
+        {
+            int highest = DBController.Instance.HIGHEST_MISSION_BLOCK;
+            int display = highest > 0 ? highest : 256;
+            highestBlockText.text = display.ToString();
+            if (highestBlockImg != null && MissionController.Instance != null)
+            {
+                var sp = MissionController.Instance.GetCurrentMissionSprite();
+                if (sp != null) highestBlockImg.sprite = sp;
+            }
+        }
         SettingCtrl.Instance.InitSetting();
         AudioController.Instance.PlayOpenClosePopup();
+        AudioController.Instance.PlayBackroundMusicGameplay();
+    }
+    private void OnEnable()
+    {
+        EventManager.OnMissionChange += HandleMissionChangeMainScene;
+    }
+    private void OnDisable()
+    {
+        EventManager.OnMissionChange -= HandleMissionChangeMainScene;
+    }
+
+    private void HandleMissionChangeMainScene(int newMissionTarget)
+    {
+        if (DBController.Instance == null) return;
+        int achieved = newMissionTarget / 2;
+        if (achieved > DBController.Instance.HIGHEST_MISSION_BLOCK)
+        {
+            DBController.Instance.HIGHEST_MISSION_BLOCK = achieved;
+        }
+        if (highestBlockText != null)
+        {
+            int highest = DBController.Instance.HIGHEST_MISSION_BLOCK;
+            highestBlockText.text = (highest > 0 ? highest : 256).ToString();
+        }
+        if (highestBlockImg != null && MissionController.Instance != null)
+        {
+            var sp = MissionController.Instance.GetCurrentMissionSprite();
+            if (sp != null) highestBlockImg.sprite = sp;
+        }
     }
     #region Override Methods
     public override void ShowScreen(UnityAction onComplete)

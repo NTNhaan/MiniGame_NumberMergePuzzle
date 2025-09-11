@@ -58,8 +58,18 @@ namespace Data
                 Save(DBKey.BEST_SCORE, _bestScore);
             }
         }
+        private int _highestMissionBlock;
+        public int HIGHEST_MISSION_BLOCK
+        {
+            get => _highestMissionBlock;
+            set
+            {
+                _highestMissionBlock = value;
+                Save(DBKey.HIGHEST_MISSION_BLOCK, _highestMissionBlock);
+            }
+        }
         #endregion
-        
+
         protected override void CustomAwake()
         {
             Initializing();
@@ -71,6 +81,7 @@ namespace Data
             CheckDependency(DBKey.VIBRATE, key => VIBRATE = true);
             CheckDependency(DBKey.TUTORIAL_COMPLETED, key => TUTORIAL_COMPLETED = false);
             CheckDependency(DBKey.BEST_SCORE, key => BEST_SCORE = 0);
+            CheckDependency(DBKey.HIGHEST_MISSION_BLOCK, key => HIGHEST_MISSION_BLOCK = 0);
             Load();
         }
 
@@ -105,7 +116,7 @@ namespace Data
                 }
             }
 
-            PlayerPrefs.Save(); 
+            PlayerPrefs.Save();
         }
         void Load()
         {
@@ -114,8 +125,9 @@ namespace Data
             _vibrate = LoadDataByKey<bool>(DBKey.VIBRATE);
             _tutorialCompleted = LoadDataByKey<bool>(DBKey.TUTORIAL_COMPLETED);
             _bestScore = LoadDataByKey<int>(DBKey.BEST_SCORE);
+            _highestMissionBlock = LoadDataByKey<int>(DBKey.HIGHEST_MISSION_BLOCK);
         }
-        
+
         public T LoadDataByKey<T>(string key)
         {
             if (typeof(T) == typeof(int))
@@ -142,7 +154,7 @@ namespace Data
             PlayerPrefs.DeleteAll();
         }
         #endregion
-    }   
+    }
 }
 
 public class DBKey
@@ -152,4 +164,5 @@ public class DBKey
     public readonly static string VIBRATE = "VIBRATE";
     public static readonly string BEST_SCORE = "BEST_SCORE";
     public readonly static string TUTORIAL_COMPLETED = "TUTORIAL_COMPLETED";
+    public static readonly string HIGHEST_MISSION_BLOCK = "HIGHEST_MISSION_BLOCK";
 }

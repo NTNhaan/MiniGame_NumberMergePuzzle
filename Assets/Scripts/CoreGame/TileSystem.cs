@@ -4,6 +4,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using DefaultNamespace;
 
+#if false
+public class MissionController { public static MissionController Instance; public int CurrentMission; public void TryUnlock(int v){} }
+public class BoosterTileClick : UnityEngine.MonoBehaviour {}
+#endif
+
 public class TileSystem : MonoBehaviour
 {
     [Header("References")]
@@ -29,6 +34,7 @@ public class TileSystem : MonoBehaviour
 
     [Header("Animator Character")]
     [SerializeField] private Animator mewAnimator;
+    private bool _smileRunning;
     private enum ScoreAwardMode
     {
         NewValue,
@@ -46,8 +52,8 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private AnimationCurve moveCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     private bool _isAnimatingSpawn;
     private bool _isMerging;
-    public bool Busy => _isAnimatingSpawn || _isMerging; // cho SpawnQueue kiểm tra khoá input
-    public bool IsBusy() => Busy; // giữ hàm cũ nếu đã serialize ở nơi khác
+    public bool Busy => _isAnimatingSpawn || _isMerging;
+    public bool IsBusy() => Busy;
 
     [Header("Tile Layout In Cell")]
     [SerializeField] private bool centerTileInCell = true;
@@ -141,6 +147,7 @@ public class TileSystem : MonoBehaviour
         tile.transform.SetParent(cell, false);
         tile.Initialize(value, color, x, y);
         ApplySprite(tile, value);
+        EnsureBoosterClickable(tile);
         _tiles[(x, y)] = tile;
         return tile;
     }
@@ -167,6 +174,7 @@ public class TileSystem : MonoBehaviour
         var tile = GetFromPool();
         tile.Initialize(value, color, column, targetRow);
         ApplySprite(tile, value);
+        EnsureBoosterClickable(tile);
 
         RectTransform animationParent = gridController != null ? gridController.GridParent : (RectTransform)tileContainer;
         if (preserveQueueStart && useRootCanvasForQueueStart && startRect != null && !startRect.Equals(null))
@@ -455,7 +463,7 @@ public class TileSystem : MonoBehaviour
 
     private IEnumerator MergeClusterChain(TileView baseTile)
     {
-        if (baseTile == null) yield break; // giữ kiểu coroutine nên yield break OK
+        if (baseTile == null) yield break;
         _isMerging = true;
         int safety = 64;
         while (safety-- > 0)
@@ -478,6 +486,10 @@ public class TileSystem : MonoBehaviour
                 baseTile = anchor;
             }
             var anchorRect = (RectTransform)anchor.transform;
+            if (addScoreOnMerge && mewAnimator != null && !_smileRunning)
+            {
+                StartCoroutine(PlaySmileAnimation("SmileAnim"));
+            }
             Vector3 anchorPos = anchorRect.position;
             float absorbDuration = 0.18f;
             var movers = new List<RectTransform>();
@@ -553,15 +565,18 @@ public class TileSystem : MonoBehaviour
             if (addScoreOnMerge)
             {
                 AwardScore(oldValue, newValue, cluster.Count);
-                if (mewAnimator != null)
-                {
-                    yield return PlaySmileAnimation("SmileAnim");
-                }
+            }
+
+            var mc = MissionController.Instance != null ? MissionController.Instance : MissionController.Ensure();
+            if (mc != null)
+            {
+                mc.TryUnlock(newValue);
             }
 
             yield return MoveTileUpwards(anchor);
             yield return null;
         }
+        yield return CompactAllColumns();
         _isMerging = false;
     }
 
@@ -595,6 +610,63 @@ public class TileSystem : MonoBehaviour
                 moveT += Time.unscaledDeltaTime / moveDur;
                 float ee = Mathf.SmoothStep(0, 1, Mathf.Clamp01(moveT));
                 rect.position = Vector3.Lerp(start, end, ee);
+                yield return null;
+            }
+            rect.SetParent(targetCell, false);
+            SnapTileToCell(rect, targetCell);
+        }
+    }
+
+    private IEnumerator CompactAllColumns()
+    {
+        if (gridController == null) yield break;
+        for (int col = 0; col < gridController.Columns; col++)
+        {
+            yield return CompactColumn(col);
+        }
+    }
+
+    private IEnumerator CompactColumn(int col)
+    {
+        var temp = new List<TileView>();
+        for (int y = 0; y < gridController.Rows; y++)
+        {
+            if (_tiles.TryGetValue((col, y), out var t) && t != null)
+                temp.Add(t);
+        }
+        if (temp.Count <= 1) yield break;
+        int nextY = 0;
+        foreach (var tile in temp)
+        {
+            if (tile.Y != nextY)
+            {
+                yield return MoveTileToRow(tile, nextY);
+            }
+            nextY++;
+        }
+    }
+
+    private IEnumerator MoveTileToRow(TileView tile, int targetY)
+    {
+        if (tile == null) yield break;
+        int startY = tile.Y;
+        if (startY == targetY) yield break;
+        int x = tile.X;
+        if (_tiles.ContainsKey((x, startY))) _tiles.Remove((x, startY));
+        _tiles[(x, targetY)] = tile;
+        tile.SetGridPosition(x, targetY);
+        var targetCell = gridController.GetCell(x, targetY);
+        if (targetCell != null)
+        {
+            var rect = (RectTransform)tile.transform;
+            Vector3 start = rect.position;
+            Vector3 end = targetCell.TransformPoint(targetCell.rect.center);
+            float t = 0f; float dur = 0.18f;
+            while (t < 1f)
+            {
+                t += Time.unscaledDeltaTime / dur;
+                float e = Mathf.SmoothStep(0, 1, Mathf.Clamp01(t));
+                rect.position = Vector3.Lerp(start, end, e);
                 yield return null;
             }
             rect.SetParent(targetCell, false);
@@ -667,6 +739,69 @@ public class TileSystem : MonoBehaviour
         if (sprite != null) tile.SetSprite(sprite);
     }
 
+    private void EnsureBoosterClickable(TileView tile)
+    {
+        if (tile == null) return;
+        if (tile.GetComponent<BoosterTileClick>() == null)
+        {
+            tile.gameObject.AddComponent<BoosterTileClick>();
+        }
+    }
+
+    // ===== Booster public APIs =====
+    public bool TryDestroyTile(TileView tile)
+    {
+        if (tile == null) return false;
+        if (_isMerging || _isAnimatingSpawn) return false;
+        if (!_tiles.ContainsKey((tile.X, tile.Y))) return false;
+        _tiles.Remove((tile.X, tile.Y));
+        ReturnToPool(tile);
+        StartCoroutine(CompactAllColumns());
+        return true;
+    }
+
+    public bool TrySwapTiles(TileView a, TileView b)
+    {
+        if (a == null || b == null) return false;
+        if (_isMerging || _isAnimatingSpawn) return false;
+        if (!_tiles.ContainsKey((a.X, a.Y)) || !_tiles.ContainsKey((b.X, b.Y))) return false;
+        // Hoán đổi giá trị (và sprite) giữa 2 tile, toạ độ giữ nguyên.
+        int tempVal = a.Value;
+        a.UpdateValue(b.Value);
+        ApplySprite(a, a.Value);
+        b.UpdateValue(tempVal);
+        ApplySprite(b, b.Value);
+        return true;
+    }
+
+    public bool TryMergePair(TileView a, TileView b)
+    {
+        if (a == null || b == null) return false;
+        if (a == b) return false;
+        if (_isMerging || _isAnimatingSpawn) return false;
+        if (a.Value != b.Value) return false;
+        if (!_tiles.ContainsKey((a.X, a.Y)) || !_tiles.ContainsKey((b.X, b.Y))) return false;
+
+        // Giữ a làm anchor, xoá b
+        int oldVal = a.Value;
+        int newVal = oldVal * 2;
+        // remove b
+        _tiles.Remove((b.X, b.Y));
+        ReturnToPool(b);
+        a.UpdateValue(newVal);
+        ApplySprite(a, newVal);
+        // mission unlock / score tuỳ chọn (không cộng cluster bonus)
+        var mc = MissionController.Instance != null ? MissionController.Instance : MissionController.Ensure();
+        mc?.TryUnlock(newVal);
+        if (ScoreController.Instance != null)
+        {
+            ScoreController.Instance.AddPoints(newVal); // đơn giản: thưởng theo giá trị mới
+        }
+        StartCoroutine(MoveTileUpwards(a));
+        StartCoroutine(CompactAllColumns());
+        return true;
+    }
+
     private void AwardScore(int oldValue, int newValue, int clusterSize)
     {
         if (ScoreController.Instance == null) return;
@@ -694,36 +829,36 @@ public class TileSystem : MonoBehaviour
             ScoreController.Instance.AddPoints(points);
     }
 
-    // Chạy animation cười: set isSmile=true, đợi vào state rồi đợi state chạy xong mới set false
     private IEnumerator PlaySmileAnimation(string stateName, float enterTimeout = 1.5f, float maxDuration = 3f)
     {
-        if (mewAnimator == null) yield break;
+        if (mewAnimator == null || _smileRunning) yield break;
+        _smileRunning = true;
         mewAnimator.SetBool("isSmile", true);
         float start = Time.unscaledTime;
-        // Đợi animator chuyển sang state
         bool entered = false;
         while (Time.unscaledTime - start < enterTimeout)
         {
             var info = mewAnimator.GetCurrentAnimatorStateInfo(0);
             if (info.IsName(stateName)) { entered = true; break; }
-            yield return null; // chờ frame kế tiếp để state cập nhật
+            yield return null;
         }
         if (!entered)
         {
             DebugLog($"SmileAnim không vào state trong {enterTimeout}s");
             mewAnimator.SetBool("isSmile", false);
+            _smileRunning = false;
             yield break;
         }
-        // Đợi state chạy hết (normalizedTime >=1) hoặc bị đổi sang state khác hoặc quá maxDuration
         start = Time.unscaledTime;
         while (Time.unscaledTime - start < maxDuration)
         {
             var info = mewAnimator.GetCurrentAnimatorStateInfo(0);
-            if (!info.IsName(stateName)) break; // state bị override
+            if (!info.IsName(stateName)) break;
             if (info.normalizedTime >= 1f && !info.loop) break;
             yield return null;
         }
         mewAnimator.SetBool("isSmile", false);
+        _smileRunning = false;
     }
 }
 

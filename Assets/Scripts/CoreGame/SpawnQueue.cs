@@ -1,6 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+
+#if false
+public class MissionController { public static MissionController Instance; public int CurrentMission; }
+#endif
 
 public class SpawnQueue : MonoBehaviour
 {
@@ -16,6 +21,8 @@ public class SpawnQueue : MonoBehaviour
     [SerializeField] private Color defaultColor = default;
     [Header("Brick Data")]
     [SerializeField] private BrickSet brickSet;
+    [Header("Mission Fallback")]
+    [SerializeField] private int fallbackStartingMission = 256;
 
     private readonly List<TileView> _queueVisuals = new();
     private readonly List<Vector3> _baseScales = new();
@@ -52,13 +59,23 @@ public class SpawnQueue : MonoBehaviour
         if (tileSystem == null)
             tileSystem = FindFirstObjectByType<TileSystem>();
         EventManager.OnTileSpawnAnimationComplete += HandleSpawnAnimationComplete;
+        EventManager.OnMissionChange += HandleMissionChanged;
+        EventManager.OnSpawnValueUnlocked += HandleSpawnValueUnlocked;
         BuildQueueSlots();
         if (Application.isPlaying)
         {
             FillQueue();
             RefreshVisuals();
             SyncRuntimeQueue();
+            StartCoroutine(DelayedMissionQueueSync());
         }
+    }
+
+    private void OnDestroy()
+    {
+        EventManager.OnTileSpawnAnimationComplete -= HandleSpawnAnimationComplete;
+        EventManager.OnMissionChange -= HandleMissionChanged;
+        EventManager.OnSpawnValueUnlocked -= HandleSpawnValueUnlocked;
     }
 
 #if UNITY_EDITOR
@@ -129,7 +146,6 @@ public class SpawnQueue : MonoBehaviour
 
     private bool _pendingQueueShift;
     private int _pendingInsertedValue;
-    // Lock để ngăn spam: chỉ cho spawn mới khi tile trước đã spawn + merge xong
     [Header("Input Lock")]
     [SerializeField] private bool lockDuringSpawnAndMerge = true;
     private bool _inputLocked;
@@ -172,14 +188,88 @@ public class SpawnQueue : MonoBehaviour
 
     private int GenerateValue()
     {
-        if (brickSet != null && brickSet.bricks != null && brickSet.bricks.Count > 0)
-            return brickSet.GetRandomNumber();
-        if (allowedValues != null && allowedValues.Length > 0)
+        int missionCap = (MissionController.Instance != null && MissionController.Instance.CurrentMission > 0)
+            ? MissionController.Instance.CurrentMission
+            : fallbackStartingMission;
+        var mc = MissionController.Instance;
+        if (mc != null && mc.UnlockedValues != null)
         {
-            int idx = Random.Range(0, allowedValues.Length);
-            return allowedValues[idx];
+            var list = new List<int>();
+            foreach (var v in mc.UnlockedValues)
+            {
+                if (v < missionCap) list.Add(v);
+            }
+            if (list.Count > 0)
+            {
+                int idx = Random.Range(0, list.Count);
+                return list[idx];
+            }
         }
-        return baseValue;
+        var fallbackSeeds = new List<int>();
+        int[] seedCandidates = { 2, 4, 8 };
+        foreach (var s in seedCandidates)
+        {
+            if (s < missionCap) fallbackSeeds.Add(s);
+        }
+        if (fallbackSeeds.Count > 0)
+        {
+            int idx = Random.Range(0, fallbackSeeds.Count);
+            return fallbackSeeds[idx];
+        }
+        int fb = baseValue;
+        while (fb >= missionCap && fb > 1) fb /= 2;
+        if (fb < 1) fb = 2;
+        return fb;
+    }
+
+    private void HandleMissionChanged(int newMissionTarget)
+    {
+        if (!Application.isPlaying) return;
+        RefilterQueueForMission(newMissionTarget);
+    }
+
+    private void RefilterQueueForMission(int missionTarget)
+    {
+        if (missionTarget <= 0)
+        {
+            missionTarget = (MissionController.Instance != null && MissionController.Instance.StartingMission > 0)
+                ? MissionController.Instance.StartingMission
+                : fallbackStartingMission;
+        }
+        var kept = new Queue<int>();
+        var mc = MissionController.Instance;
+        foreach (var v in _values)
+        {
+            if (v < missionTarget && (mc == null || mc.UnlockedValues.Contains(v))) kept.Enqueue(v);
+        }
+        _values.Clear();
+        foreach (var v in kept) _values.Enqueue(v);
+        while (_values.Count < queueSize)
+        {
+            _values.Enqueue(GenerateValue());
+        }
+        RefreshVisuals();
+        SyncRuntimeQueue();
+        if (enableDebug)
+        {
+            Debug.Log($"[SpawnQueue] Refiltered queue for mission {missionTarget}. Values: {string.Join(",", _values)}");
+        }
+    }
+
+    private void HandleSpawnValueUnlocked(int value)
+    {
+        if (!Application.isPlaying) return;
+        int missionCap = MissionController.Instance != null ? MissionController.Instance.CurrentMission : fallbackStartingMission;
+        RefilterQueueForMission(missionCap);
+    }
+
+    private System.Collections.IEnumerator DelayedMissionQueueSync()
+    {
+        yield return null; yield return null;
+        if (MissionController.Instance != null)
+        {
+            HandleMissionChanged(MissionController.Instance.CurrentMission);
+        }
     }
 
     private void RefreshVisuals()
@@ -222,6 +312,8 @@ public class SpawnQueue : MonoBehaviour
         if (tileSystem == null || tileSystem.Grid == null) return false;
         if (column < 0 || column >= tileSystem.Grid.Columns) return false;
         if (lockDuringSpawnAndMerge && _inputLocked) return false;
+        // Chặn spawn khi đang dùng booster
+        if (BoosterController.Instance != null && BoosterController.Instance.IsActive) return false;
         if (_values.Count == 0) FillQueue();
         int value = 0;
         int originalCount = _values.Count;
@@ -281,23 +373,17 @@ public class SpawnQueue : MonoBehaviour
             RefreshVisuals();
         _freezeHighlight = false;
         SyncRuntimeQueue();
-        // Merge có thể đang chạy trong TileSystem. Chờ tới khi hệ thống báo xong để mở khoá.
         if (lockDuringSpawnAndMerge)
             StartCoroutine(WaitForMergeUnlock());
     }
 
     private System.Collections.IEnumerator WaitForMergeUnlock()
     {
-        // Poll trạng thái TileSystem tới khi không còn merging + không còn spawn anim.
         while (tileSystem != null && tileSystem.Busy)
-            yield return null; // chờ frame tiếp
+            yield return null;
         _inputLocked = false;
     }
 
-    private void OnDestroy()
-    {
-        EventManager.OnTileSpawnAnimationComplete -= HandleSpawnAnimationComplete;
-    }
 
     private System.Collections.IEnumerator AnimateQueueRefresh(int newVal)
     {

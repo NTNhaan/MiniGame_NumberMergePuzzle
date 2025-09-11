@@ -8,9 +8,23 @@ using UnityEngine.UI;
 using Data;
 public class GamePlayScene : SceneBase
 {
+    [SerializeField] private GameObject panelBooster;
+    [Header("Booster Controller (auto if null)")]
+    [SerializeField] private BoosterController boosterController;
     void Start()
     {
         SettingCtrl.Instance.InitSetting();
+        if (boosterController == null)
+        {
+            boosterController = FindFirstObjectByType<BoosterController>();
+            if (boosterController == null)
+            {
+                var go = new GameObject("BoosterController");
+                boosterController = go.AddComponent<BoosterController>();
+            }
+        }
+        boosterController.SetPanel(panelBooster);
+        if (panelBooster != null) panelBooster.SetActive(false);
     }
     #region Override Methods
     public override void ShowScreen(UnityAction onComplete)
@@ -48,5 +62,27 @@ public class GamePlayScene : SceneBase
     {
         AudioController.Instance.PlaySoundButtonClick();
         SettingCtrl.Instance.SetMusic();
+    }
+
+    // ===== Booster Buttons =====
+    public void OnClickBoosterDestroy()
+    {
+        AudioController.Instance.PlaySoundButtonClick();
+        boosterController?.ActivateDestroy();
+    }
+    public void OnClickBoosterSwap()
+    {
+        AudioController.Instance.PlaySoundButtonClick();
+        boosterController?.ActivateSwap();
+    }
+    public void OnClickBoosterMerge()
+    {
+        AudioController.Instance.PlaySoundButtonClick();
+        boosterController?.ActivateMerge();
+    }
+    public void OnClickBoosterCancel()
+    {
+        AudioController.Instance.PlaySoundButtonClick();
+        boosterController?.Cancel();
     }
 }

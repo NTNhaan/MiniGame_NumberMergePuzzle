@@ -416,6 +416,7 @@ GameObject:
   m_Component:
   - component: {fileID: 843177559}
   - component: {fileID: 843177560}
+  - component: {fileID: 843177561}
   m_Layer: 0
   m_Name: DBController
   m_TagString: Untagged
@@ -451,6 +452,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
+--- !u!114 &843177561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 843177558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb495bf708cd1b747a786e3743608304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dontDestroyOnLoad: 1
+  startingMission: 256
+  autoDoubleNext: 0
+  maxMissionCap: 65536
+  brickSet: {fileID: 11400000, guid: ca7ea63107e89dd43815d3e1bef4a800, type: 2}
 --- !u!1 &920572596
 GameObject:
   m_ObjectHideFlags: 0
