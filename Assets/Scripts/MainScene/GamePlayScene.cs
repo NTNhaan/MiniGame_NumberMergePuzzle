@@ -9,7 +9,7 @@ using Data;
 public class GamePlayScene : SceneBase
 {
     [SerializeField] private GameObject panelBooster;
-    [Header("Booster Controller (auto if null)")]
+    [Header("Booster Controller")]
     [SerializeField] private BoosterController boosterController;
     void Start()
     {

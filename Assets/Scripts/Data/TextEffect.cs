@@ -4,7 +4,7 @@ using UnityEngine.UI;
 public class TextEffect : MonoBehaviour
 {
     [SerializeField] private Text textComponent;
-    [SerializeField] private Text LineComponent;
+    // [SerializeField] private Text LineComponent;
     public void Update()
     {
         PlayZoomEffect();
@@ -20,8 +20,8 @@ public class TextEffect : MonoBehaviour
         float halfDuration = duration / 1f;
         Vector3 originalScale = textComponent.transform.localScale;
         Vector3 targetScale = originalScale * zoomScale;
-        Vector3 lineOriginalScale = LineComponent.transform.localScale;
-        Vector3 lineTargetScale = lineOriginalScale * zoomScale;
+        // Vector3 lineOriginalScale = LineComponent.transform.localScale;
+        // Vector3 lineTargetScale = lineOriginalScale * zoomScale;
         float timer = 0f;
         // Zoom in
         while (timer < halfDuration)
@@ -29,7 +29,7 @@ public class TextEffect : MonoBehaviour
             timer += Time.deltaTime;
             float t = timer / halfDuration;
             textComponent.transform.localScale = Vector3.Lerp(originalScale, targetScale, t);
-            LineComponent.transform.localScale = Vector3.Lerp(lineOriginalScale, lineTargetScale, t);
+            // LineComponent.transform.localScale = Vector3.Lerp(lineOriginalScale, lineTargetScale, t);
             yield return null;
         }
         // Zoom out
@@ -39,10 +39,10 @@ public class TextEffect : MonoBehaviour
             timer += Time.deltaTime;
             float t = timer / halfDuration;
             textComponent.transform.localScale = Vector3.Lerp(targetScale, originalScale, t);
-            LineComponent.transform.localScale = Vector3.Lerp(lineTargetScale, lineOriginalScale, t);
+            // LineComponent.transform.localScale = Vector3.Lerp(lineTargetScale, lineOriginalScale, t);
             yield return null;
         }
         textComponent.transform.localScale = originalScale;
-        LineComponent.transform.localScale = lineOriginalScale;
+        // LineComponent.transform.localScale = lineOriginalScale;
     }
 }
