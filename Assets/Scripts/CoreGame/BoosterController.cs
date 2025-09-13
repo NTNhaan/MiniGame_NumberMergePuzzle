@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using Data;
 
 public class BoosterController : MonoBehaviour
 {
@@ -25,6 +26,7 @@ public class BoosterController : MonoBehaviour
     [SerializeField, TextArea] private string swapGuide = "Choose two block to swap";
     [SerializeField, TextArea] private string mergeGuide = "Choose one block to apply magnet";
     [SerializeField, TextArea] private string notMatchGuide = "Not match. Find same number";
+    [SerializeField, TextArea] private string notEnoughCoins = "Not enough coins";
 
 
     private BoosterMode _mode = BoosterMode.None;
@@ -37,6 +39,20 @@ public class BoosterController : MonoBehaviour
         Instance = this;
         if (tileSystem == null) tileSystem = FindFirstObjectByType<TileSystem>();
         if (textCover != null) textCover.gameObject.SetActive(false);
+    }
+
+    private bool CanAffordBooster()
+    {
+        if (DBController.Instance == null) return true; // allow if DB not ready
+        return DBController.Instance.COIN >= DataConfig.COIN_BOOSTER;
+    }
+
+    private bool TrySpendBooster()
+    {
+        if (DBController.Instance == null) return true;
+        if (DBController.Instance.COIN < DataConfig.COIN_BOOSTER) return false;
+        DBController.Instance.COIN -= DataConfig.COIN_BOOSTER; // triggers EventManager.CoinChanged via DBController
+        return true;
     }
 
     public void SetPanel(GameObject panel) => boosterPanel = panel;
@@ -131,9 +147,11 @@ public class BoosterController : MonoBehaviour
         switch (_mode)
         {
             case BoosterMode.DestroySelect:
+                if (!CanAffordBooster()) { textCover.text = notEnoughCoins; textCover.gameObject.SetActive(true); break; }
                 if (tileSystem.TryDestroyTile(tile))
                 {
-                    Cancel();
+                    if (TrySpendBooster())
+                        Cancel();
                 }
                 break;
 
@@ -146,9 +164,11 @@ public class BoosterController : MonoBehaviour
             case BoosterMode.SwapSecond:
                 if (_firstSelection == null) { _mode = BoosterMode.SwapFirst; UpdateCoverText(); break; }
                 if (_firstSelection == tile) { Cancel(); break; }
+                if (!CanAffordBooster()) { textCover.text = notEnoughCoins; textCover.gameObject.SetActive(true); break; }
                 if (tileSystem.TrySwapTiles(_firstSelection, tile))
                 {
-                    Cancel();
+                    if (TrySpendBooster())
+                        Cancel();
                 }
                 break;
 
@@ -168,9 +188,11 @@ public class BoosterController : MonoBehaviour
                     // giữ nguyên _firstSelection và _mode = MergeSecond
                     break;
                 }
+                if (!CanAffordBooster()) { textCover.text = notEnoughCoins; textCover.gameObject.SetActive(true); break; }
                 if (tileSystem.TryMergePair(_firstSelection, tile))
                 {
-                    Cancel();
+                    if (TrySpendBooster())
+                        Cancel();
                 }
                 break;
         }

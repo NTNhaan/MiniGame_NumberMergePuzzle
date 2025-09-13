@@ -13,15 +13,18 @@ public static class DataConfig
     public const int QUEUE_SIZE = 3;
     public const int BASE_VALUE = 2;
     public static readonly int[] ALLOWED_VALUES = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 2096, 8192 };
-    public static readonly Color DEFAULT_TILE_COLOR = new Color(1f, 0.2f, 0.6f); 
+    public static readonly Color DEFAULT_TILE_COLOR = new Color(1f, 0.2f, 0.6f);
     public const float QUEUE_ACTIVE_SCALE = 1f;
     public const float QUEUE_INACTIVE_SCALE = 1f;
     public const float QUEUE_SCALE_LERP_SPEED = 12f;
     public const float QUEUE_ACTIVE_Y_OFFSET = 10f;
     public const float QUEUE_NEW_ITEM_POP_DURATION = 0.2f;
 
+    // ECONOMY ---------------------------------------------
+    public const int COIN_BOOSTER = 150; // cost per booster use
+
     // TILE SPAWN ANIMATION ---------------------------------
-    public const float TILE_MOVE_DURATION = 0.35f;    
+    public const float TILE_MOVE_DURATION = 0.35f;
     public const bool TILE_CONSTANT_SPEED = true;
     public const float TILE_PIXELS_PER_SECOND = 1600f;
     public const float TILE_MIN_DURATION = 0.15f;

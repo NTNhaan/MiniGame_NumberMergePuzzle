@@ -19,4 +19,8 @@ public static class EventManager
     // Khi một giá trị mới được merge lần đầu và được mở khoá để spawn
     public static event UnityAction<int> OnSpawnValueUnlocked;
     public static void SpawnValueUnlocked(int value) => OnSpawnValueUnlocked?.Invoke(value);
+
+    // Coin changes (DBController updates, IAP rewards, boosters spend)
+    public static event UnityAction<int> OnCoinChanged;
+    public static void CoinChanged(int coins) => OnCoinChanged?.Invoke(coins);
 }

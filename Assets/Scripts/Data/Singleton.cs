@@ -8,30 +8,60 @@ namespace Data
 
         public static T Instance
         {
-            get => instance;
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindFirstObjectByType<T>();
+
+                    if (instance == null)
+                    {
+                        GameObject existingController = GameObject.Find("Controller");
+                        if (existingController != null)
+                        {
+                            instance = existingController.GetComponent<T>();
+                        }
+                        else
+                        {
+                            GameObject g = new GameObject("Controller");
+                            instance = g.AddComponent<T>();
+                        }
+                    }
+                }
+                return instance;
+            }
         }
 
         void Awake()
         {
-            //DontDestroyOnLoad (gameObject);
             if (instance == null)
             {
                 instance = this as T;
 
                 if (dontDestroyOnLoad)
                 {
-                    DontDestroyOnLoad(gameObject);
+                    if (transform.parent == null)
+                    {
+                        DontDestroyOnLoad(gameObject);
+                    }
                 }
-                
-                CustomAwake();
-
             }
             else
             {
-                Destroy(gameObject);
+                if (instance != this)
+                {
+                    Destroy(gameObject);
+                }
             }
+
+            CustomAwake();
         }
 
         protected virtual void CustomAwake() { }
+
+        protected virtual void OnDestroy()
+        {
+            instance = null;
+        }
     }
 }

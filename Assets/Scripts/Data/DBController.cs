@@ -68,6 +68,17 @@ namespace Data
                 Save(DBKey.HIGHEST_MISSION_BLOCK, _highestMissionBlock);
             }
         }
+        private int _coin;
+        public int COIN
+        {
+            get => _coin;
+            set
+            {
+                _coin = value;
+                Save(DBKey.COIN, _coin);
+                EventManager.CoinChanged(_coin);
+            }
+        }
         #endregion
 
         protected override void CustomAwake()
@@ -82,6 +93,8 @@ namespace Data
             CheckDependency(DBKey.TUTORIAL_COMPLETED, key => TUTORIAL_COMPLETED = false);
             CheckDependency(DBKey.BEST_SCORE, key => BEST_SCORE = 0);
             CheckDependency(DBKey.HIGHEST_MISSION_BLOCK, key => HIGHEST_MISSION_BLOCK = 0);
+            CheckDependency(DBKey.COIN, key => COIN = 150);
+
             Load();
         }
 
@@ -126,6 +139,8 @@ namespace Data
             _tutorialCompleted = LoadDataByKey<bool>(DBKey.TUTORIAL_COMPLETED);
             _bestScore = LoadDataByKey<int>(DBKey.BEST_SCORE);
             _highestMissionBlock = LoadDataByKey<int>(DBKey.HIGHEST_MISSION_BLOCK);
+            _coin = LoadDataByKey<int>(DBKey.COIN);
+            EventManager.CoinChanged(_coin);
         }
 
         public T LoadDataByKey<T>(string key)
@@ -165,4 +180,5 @@ public class DBKey
     public static readonly string BEST_SCORE = "BEST_SCORE";
     public readonly static string TUTORIAL_COMPLETED = "TUTORIAL_COMPLETED";
     public static readonly string HIGHEST_MISSION_BLOCK = "HIGHEST_MISSION_BLOCK";
+    public static readonly string COIN = "COIN";
 }

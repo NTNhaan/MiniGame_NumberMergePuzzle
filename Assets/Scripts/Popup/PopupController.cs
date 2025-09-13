@@ -13,6 +13,8 @@ public class PopupController : Singleton<PopupController>
 
     [Header("Tutorial Popup")]
     [SerializeField] private TutorialPopup popUpTutorial;
+    [Header("ShopIAP Popup")]
+    [SerializeField] private ShopIAPPopUp shopIAPPopUp;
 
     public PausePopup pausePopup => popUpPauseGame;
 
@@ -61,6 +63,22 @@ public class PopupController : Singleton<PopupController>
     {
         AudioController.Instance.PlayOpenClosePopup();
         popUpPauseGame.HidePopUp(-1800f, .6f);
+    }
+    #endregion
+
+
+    #region ShopIAP
+    [ContextMenu("Show Pause Popup")]
+    public void ShowShopIAPPopUp()
+    {
+        AudioController.Instance.PlayOpenClosePopup();
+        shopIAPPopUp.ShowPopUp(100f, .6f);
+    }
+    [ContextMenu("Hide Pause Popup")]
+    public void HideShopIAPPopUp()
+    {
+        AudioController.Instance.PlayOpenClosePopup();
+        shopIAPPopUp.HidePopUp(-1800f, .6f);
     }
     #endregion
 }

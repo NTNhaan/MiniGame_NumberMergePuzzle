@@ -8,6 +8,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms.Impl;
 using Object = System.Object;
+using Data;
 
 public class UIManager : MonoBehaviour
 {
@@ -22,11 +23,16 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Text PanelScoreText;
     [SerializeField] private Text PanelBestScoreText;
 
+    [Header("Coin Shop IAP")]
+    [SerializeField] private Text CoinText;
     void Start()
     {
         ScoreController.Instance.OnScoreChanged += UpdateScoreText;
         ScoreController.Instance.OnScoreChanged += UpdatePanelScoreText;
         EventManager.OnMissionChange += UpdateMissionText;
+        // Coin UI
+        EventManager.OnCoinChanged += UpdateCoinText;
+        if (DBController.Instance != null) UpdateCoinText(DBController.Instance.COIN);
         // Set initial mission text nếu MissionController đã khởi tạo trước UIManager
         InitializeMissionUI();
         // Đảm bảo nếu MissionController khởi tạo trễ thì vẫn sync được mission thực tế (ví dụ đã > startingMission)
@@ -38,7 +44,13 @@ public class UIManager : MonoBehaviour
         ScoreController.Instance.OnScoreChanged -= UpdateScoreText;
         ScoreController.Instance.OnScoreChanged -= UpdatePanelScoreText;
         EventManager.OnMissionChange -= UpdateMissionText;
+        EventManager.OnCoinChanged -= UpdateCoinText;
         // ScoreController.Instance.OnHealthChanged -= UpdateHealthPlayer;
+    }
+
+    private void UpdateCoinText(int coin)
+    {
+        if (CoinText != null) CoinText.text = coin.ToString();
     }
     private void Update()
     {
