@@ -60,6 +60,7 @@ public class BoosterController : MonoBehaviour
     public void ActivateDestroy()
     {
         if (tileSystem != null && tileSystem.Busy) return; // tránh dùng trong lúc merge
+        if (!CanAffordBooster()) { OpenShopForCoins(); return; }
         _mode = BoosterMode.DestroySelect;
         _firstSelection = null;
         ShowPanel(true);
@@ -68,6 +69,7 @@ public class BoosterController : MonoBehaviour
     public void ActivateSwap()
     {
         if (tileSystem != null && tileSystem.Busy) return;
+        if (!CanAffordBooster()) { OpenShopForCoins(); return; }
         _mode = BoosterMode.SwapFirst;
         _firstSelection = null;
         ShowPanel(true);
@@ -76,6 +78,7 @@ public class BoosterController : MonoBehaviour
     public void ActivateMerge()
     {
         if (tileSystem != null && tileSystem.Busy) return;
+        if (!CanAffordBooster()) { OpenShopForCoins(); return; }
         _mode = BoosterMode.MergeFirst;
         _firstSelection = null;
         ShowPanel(true);
@@ -137,6 +140,27 @@ public class BoosterController : MonoBehaviour
         }
         _notMatchRoutine = null;
     }
+
+    // New handling: open shop instead of temporary text when lacking coins
+    private void OpenShopForCoins()
+    {
+        Cancel();
+        if (ShopController.Instance != null)
+        {
+            ShopController.Instance?.ShowShop();
+        }
+        else
+        {
+            // Fallback old behavior
+            if (textCover != null)
+            {
+                ShowPanel(true);
+                textCover.text = notEnoughCoins;
+                textCover.gameObject.SetActive(true);
+            }
+        }
+    }
+
     public void HandleTileClicked(TileView tile)
     {
         if (tile == null) return;
@@ -147,7 +171,7 @@ public class BoosterController : MonoBehaviour
         switch (_mode)
         {
             case BoosterMode.DestroySelect:
-                if (!CanAffordBooster()) { textCover.text = notEnoughCoins; textCover.gameObject.SetActive(true); break; }
+                if (!CanAffordBooster()) { OpenShopForCoins(); break; }
                 if (tileSystem.TryDestroyTile(tile))
                 {
                     if (TrySpendBooster())
@@ -164,7 +188,7 @@ public class BoosterController : MonoBehaviour
             case BoosterMode.SwapSecond:
                 if (_firstSelection == null) { _mode = BoosterMode.SwapFirst; UpdateCoverText(); break; }
                 if (_firstSelection == tile) { Cancel(); break; }
-                if (!CanAffordBooster()) { textCover.text = notEnoughCoins; textCover.gameObject.SetActive(true); break; }
+                if (!CanAffordBooster()) { OpenShopForCoins(); break; }
                 if (tileSystem.TrySwapTiles(_firstSelection, tile))
                 {
                     if (TrySpendBooster())
@@ -188,7 +212,7 @@ public class BoosterController : MonoBehaviour
                     // giữ nguyên _firstSelection và _mode = MergeSecond
                     break;
                 }
-                if (!CanAffordBooster()) { textCover.text = notEnoughCoins; textCover.gameObject.SetActive(true); break; }
+                if (!CanAffordBooster()) { OpenShopForCoins(); break; }
                 if (tileSystem.TryMergePair(_firstSelection, tile))
                 {
                     if (TrySpendBooster())

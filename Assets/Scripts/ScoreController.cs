@@ -1,5 +1,5 @@
 using UnityEngine;
-using Data; 
+using Data;
 using UnityEngine.Events;
 namespace DefaultNamespace
 {
@@ -8,9 +8,10 @@ namespace DefaultNamespace
         // private const string HIGH_SCORE_KEY = "HighScore";
         public event UnityAction<int> OnScoreChanged;
         public event UnityAction<int> OnHealthChanged;
-        public int Score {get; private set;}
-        public int HighScore {get; private set;}
-        public int HealthPlayer {get; private set;}
+        public event UnityAction<int> OnCoinsChanged; // local coin event (optional legacy)
+        public int Score { get; private set; }
+        public int HighScore { get; private set; }
+        public int HealthPlayer { get; private set; }
         [SerializeField] private GameObject iconCheckOverHighScore;
         private void Start()
         {
@@ -43,11 +44,21 @@ namespace DefaultNamespace
 
             OnScoreChanged?.Invoke(Score);
         }
-        
+
         public void TakeDamage(int damage)
         {
             HealthPlayer -= damage;
             OnHealthChanged?.Invoke(HealthPlayer);
+        }
+        public void UpdateCoin()
+        {
+            if (DBController.Instance == null) return;
+            int coins = DBController.Instance.COIN;
+            Debug.Log($"[ScoreController] UpdateCoin -> {coins}");
+            // Fire new unified event path
+            EventManager.CoinsChanged(coins);
+            // Keep optional local notify if some legacy subscriber relies on OnCoinsChanged directly on ScoreController
+            OnCoinsChanged?.Invoke(coins);
         }
         public int GetHighScore() => HighScore;
         public int GetHealthPlayer() => HealthPlayer;

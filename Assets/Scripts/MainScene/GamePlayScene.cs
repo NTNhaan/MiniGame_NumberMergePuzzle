@@ -8,9 +8,16 @@ using UnityEngine.UI;
 using Data;
 public class GamePlayScene : SceneBase
 {
-    [SerializeField] private GameObject panelBooster;
+
     [Header("Booster Controller")]
+    [SerializeField] private GameObject panelBooster;
     [SerializeField] private BoosterController boosterController;
+
+    [Header("Setting UI")]
+    [SerializeField] private Image imgSound;
+    [SerializeField] private Image imgVibration;
+    [SerializeField] private ButtonType[] sprtSound;
+    [SerializeField] private ButtonType[] sprtVibrate;
     void Start()
     {
         SettingCtrl.Instance.InitSetting();
@@ -51,12 +58,16 @@ public class GamePlayScene : SceneBase
     public void ClickSoundButton()
     {
         AudioController.Instance.PlaySoundButtonClick();
-        SettingCtrl.Instance.SetSound();
+        DBController.Instance.SOUND = !DBController.Instance.SOUND;
+        AudioController.Instance.SetVolumeSound(DBController.Instance.SOUND);
+        SettingCtrl.Instance.UpdateSettingImage(imgSound, sprtSound, DBController.Instance.SOUND);
     }
     public void ClickVibrationButton()
     {
         AudioController.Instance.PlaySoundButtonClick();
-        SettingCtrl.Instance.SetVibration();
+        DBController.Instance.VIBRATE = !DBController.Instance.VIBRATE;
+        AudioController.Instance.SetVolumeSound(DBController.Instance.VIBRATE);
+        SettingCtrl.Instance.UpdateSettingImage(imgVibration, sprtVibrate, DBController.Instance.VIBRATE);
     }
     public void ClickMusicButton()
     {
@@ -64,7 +75,7 @@ public class GamePlayScene : SceneBase
         SettingCtrl.Instance.SetMusic();
     }
 
-    // ===== Booster Buttons =====
+    #region Booster
     public void OnClickBoosterDestroy()
     {
         AudioController.Instance.PlaySoundButtonClick();
@@ -84,5 +95,10 @@ public class GamePlayScene : SceneBase
     {
         AudioController.Instance.PlaySoundButtonClick();
         boosterController?.Cancel();
+    }
+    #endregion
+    public void OnClickLoadHomeMenu()
+    {
+        SceneManager.LoadSceneAsync("MainScene");
     }
 }

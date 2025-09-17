@@ -23,6 +23,7 @@ public class GameManager : Singleton<GameManager>
 
         AudioController.Instance.PlayBackroundMusicGameplay();
     }
+
     public void HandleHealthChanged(int damage)
     {
         scoreController.TakeDamage(damage);

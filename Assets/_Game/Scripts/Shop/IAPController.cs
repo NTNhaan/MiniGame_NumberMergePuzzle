@@ -25,15 +25,6 @@ public class IAPController : Singleton<IAPController>, IStoreListener
     public UnityAction<string> OnPurchaseSuccess;
     public UnityAction<string, PurchaseFailureReason> OnPurchaseFailedAction;
 
-    [System.Serializable]
-    public class CoinReward
-    {
-        public string productId;
-        public int coins;
-    }
-    [Header("Coin Rewards")]
-    [SerializeField] private List<CoinReward> coinRewards = new List<CoinReward>();
-
     private void Awake()
     {
         InitializeUnityGamingServices();
@@ -99,10 +90,10 @@ public class IAPController : Singleton<IAPController>, IStoreListener
         if (!IsInitialized()) return;
 
         var apple = storeExtensionProvider.GetExtension<IAppleExtensions>();
-        // apple.RestoreTransactions((success) =>
-        // {
-        //     Debug.Log("RestorePurchases: " + success);
-        // });
+        apple.RestoreTransactions((success, message) =>
+        {
+            Debug.Log("RestorePurchases: " + success);
+        });
     }
 
     public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
@@ -122,13 +113,6 @@ public class IAPController : Singleton<IAPController>, IStoreListener
         if (args.purchasedProduct.hasReceipt)
         {
             Debug.Log("Receipt: " + args.purchasedProduct.receipt);
-            var pid = args.purchasedProduct.definition.id;
-            var reward = coinRewards.Find(r => r.productId == pid);
-            if (reward != null && reward.coins > 0 && DBController.Instance != null)
-            {
-                DBController.Instance.COIN += reward.coins;
-                Debug.Log($"Added {reward.coins} coins for {pid}");
-            }
             OnPurchaseSuccess?.Invoke(args.purchasedProduct.definition.id);
             storeController.ConfirmPendingPurchase(args.purchasedProduct);
         }

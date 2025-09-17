@@ -23,26 +23,34 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Text PanelScoreText;
     [SerializeField] private Text PanelBestScoreText;
 
+
     [Header("Coin Shop IAP")]
     [SerializeField] private Text CoinText;
+
+    [Header("Animation Best Score")]
+    [SerializeField] private Animator bestScoreAnim;
+    [SerializeField] private float bestScoreAnimDuration = 0.9f;
+    private Coroutine _bestScoreAnimRoutine;
+    private int _prevBestScore;
     void Start()
     {
         ScoreController.Instance.OnScoreChanged += UpdateScoreText;
         ScoreController.Instance.OnScoreChanged += UpdatePanelScoreText;
+        ScoreController.Instance.OnScoreChanged += OnScoreMaybeUpdatedHighScore;
         EventManager.OnMissionChange += UpdateMissionText;
-        // Coin UI
+
         EventManager.OnCoinChanged += UpdateCoinText;
         if (DBController.Instance != null) UpdateCoinText(DBController.Instance.COIN);
-        // Set initial mission text nếu MissionController đã khởi tạo trước UIManager
+        UpdateBestScoreTexts();
+        _prevBestScore = ScoreController.Instance != null ? ScoreController.Instance.GetHighScore() : 0;
         InitializeMissionUI();
-        // Đảm bảo nếu MissionController khởi tạo trễ thì vẫn sync được mission thực tế (ví dụ đã > startingMission)
         StartCoroutine(DelayedMissionSync());
-        // ScoreController.Instance.OnHealthChanged += UpdateHealthPlayer;
     }
     void OnDestroy()
     {
         ScoreController.Instance.OnScoreChanged -= UpdateScoreText;
         ScoreController.Instance.OnScoreChanged -= UpdatePanelScoreText;
+        ScoreController.Instance.OnScoreChanged -= OnScoreMaybeUpdatedHighScore;
         EventManager.OnMissionChange -= UpdateMissionText;
         EventManager.OnCoinChanged -= UpdateCoinText;
         // ScoreController.Instance.OnHealthChanged -= UpdateHealthPlayer;
@@ -52,27 +60,64 @@ public class UIManager : MonoBehaviour
     {
         if (CoinText != null) CoinText.text = coin.ToString();
     }
-    private void Update()
-    {
-        PanelBestScoreText.text = ScoreController.Instance.GetHighScore().ToString();
-        // HealthPlayer.text = scoreManager.GetHealthPlayer().ToString();
-    }
+    // removed per-frame best score polling
 
     void UpdateScoreText(int score)
     {
-        scoreText.text = ScoreController.Instance.Score.ToString();
+        scoreText.text = ScoreController.Instance.Score.ToString("N0");
     }
 
     void UpdatePanelScoreText(int score)
     {
-        PanelScoreText.text = "Score: " + ScoreController.Instance.Score;
+        PanelScoreText.text = ScoreController.Instance.Score.ToString("N0");
+    }
+
+    private void OnScoreMaybeUpdatedHighScore(int _)
+    {
+        int newHS = ScoreController.Instance != null ? ScoreController.Instance.GetHighScore() : 0;
+        if (newHS > _prevBestScore)
+        {
+            PlayBestScoreAnim();
+        }
+        _prevBestScore = newHS;
+        UpdateBestScoreTexts();
+    }
+
+    private void UpdateBestScoreTexts()
+    {
+        int hs = ScoreController.Instance != null ? ScoreController.Instance.GetHighScore() : 0;
+        if (bestScoreText != null) bestScoreText.text = hs.ToString();
+        if (PanelBestScoreText != null) PanelBestScoreText.text = hs.ToString();
+    }
+
+    private void PlayBestScoreAnim()
+    {
+        if (bestScoreAnim == null) return;
+        if (_bestScoreAnimRoutine != null)
+        {
+            StopCoroutine(_bestScoreAnimRoutine);
+            _bestScoreAnimRoutine = null;
+        }
+        _bestScoreAnimRoutine = StartCoroutine(BestScoreAnimRoutine());
+    }
+
+    private IEnumerator BestScoreAnimRoutine()
+    {
+        bestScoreAnim.SetBool("isJump", true);
+        float t = 0f;
+        while (t < bestScoreAnimDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        bestScoreAnim.SetBool("isJump", false);
+        _bestScoreAnimRoutine = null;
     }
 
     void UpdateMissionText(int mission)
     {
         if (textMission != null)
         {
-            // Chỉ hiển thị target (mission) không cần prefix nếu không muốn
             textMission.text = mission.ToString();
         }
     }
@@ -83,7 +128,6 @@ public class UIManager : MonoBehaviour
             target = MissionController.Instance.CurrentMission;
         if (target <= 0)
         {
-            // fallback starting mission (256)
             target = 256;
         }
         UpdateMissionText(target);
@@ -91,7 +135,6 @@ public class UIManager : MonoBehaviour
 
     private System.Collections.IEnumerator DelayedMissionSync()
     {
-        // Chờ 2 frame để chắc chắn các Awake khác chạy xong
         yield return null; yield return null;
         if (MissionController.Instance != null)
         {

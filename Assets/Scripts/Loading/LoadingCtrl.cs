@@ -32,12 +32,13 @@ public class LoadingCtrl : MonoBehaviour
     private async UniTaskVoid LoadingScene(string sceneName)
     {
         progressBar.DOFillAmount(1, 2f).SetEase(Ease.Linear).From(0);
-        
+
         await DOVirtual.Int(0, 100, 2f, (X) =>
         {
-            textPercent.text = X.ToString()+$"%";
+            textPercent.text = X.ToString() + $"%";
         }).ToUniTask();
         SceneManager.LoadScene(NEXT_SCENE_NAME);
+        // SceneController.Instance.ChangeScene(SceneType.MainScene);
     }
     void OnInitData()
     {

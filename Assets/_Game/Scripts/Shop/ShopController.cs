@@ -8,6 +8,7 @@ using Audio;
 public class ShopController : Singleton<ShopController>
 {
     [SerializeField] private GameObject shopUI;
+    [SerializeField] private ShopIAPPopUp shopIAP;
     [SerializeField] private List<ItemCoin> lstItemCoin;
     bool isOpen = false;
 
@@ -28,11 +29,20 @@ public class ShopController : Singleton<ShopController>
     {
         if (isOpen)
         {
-            Hide();
+            // Hide();
+            shopIAP.HidePopUp(-2000f, .6f);
+            isOpen = false;
             return;
         }
-        Show();
+        shopIAP.ShowPopUp(100f, .6f);
+        isOpen = true;
         await UniTask.Delay(1000);
+    }
+    public void HideShop()
+    {
+        AudioController.Instance.PlayOpenClosePopup();
+        shopIAP.HidePopUp(-2000f, .6f);
+        isOpen = false;
     }
     public void Show()
     {

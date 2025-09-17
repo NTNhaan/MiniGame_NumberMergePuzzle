@@ -8,7 +8,7 @@ namespace Popup
     {
         [SerializeField] protected Transform tfmPopup;
         [SerializeField] protected Image imgCover;
-        
+
         public Transform TfmPopup { get => tfmPopup; }
 
         public virtual void ShowPopUp(float posY = 0, float duration = 0, UnityAction onComplete = null)
@@ -32,7 +32,7 @@ namespace Popup
                 onComplete?.Invoke();
             });
         }
-        public virtual void ShowCover(float duration=0.5f, UnityAction onComplete = null)
+        public virtual void ShowCover(float duration = 0.5f, UnityAction onComplete = null)
         {
             imgCover.gameObject.SetActive(true);
             imgCover.DOFade(0.9f, duration).SetEase(Ease.Linear).OnComplete(() =>

@@ -23,4 +23,12 @@ public static class EventManager
     // Coin changes (DBController updates, IAP rewards, boosters spend)
     public static event UnityAction<int> OnCoinChanged;
     public static void CoinChanged(int coins) => OnCoinChanged?.Invoke(coins);
+
+    // Alias event specifically requested (OnCoinsChanged) – dispatches alongside OnCoinChanged for compatibility
+    public static event UnityAction<int> OnCoinsChanged;
+    public static void CoinsChanged(int coins)
+    {
+        OnCoinsChanged?.Invoke(coins);
+        CoinChanged(coins); // ensure legacy listeners still get updates
+    }
 }

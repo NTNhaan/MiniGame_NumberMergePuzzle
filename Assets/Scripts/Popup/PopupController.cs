@@ -2,6 +2,7 @@ using Audio;
 using UnityEngine;
 using Data;
 using Popup;
+using DG.Tweening;
 
 public class PopupController : Singleton<PopupController>
 {
@@ -13,10 +14,35 @@ public class PopupController : Singleton<PopupController>
 
     [Header("Tutorial Popup")]
     [SerializeField] private TutorialPopup popUpTutorial;
-    [Header("ShopIAP Popup")]
-    [SerializeField] private ShopIAPPopUp shopIAPPopUp;
 
+    // [Header("ShopIAP Popup")]
+    // [SerializeField] private ShopIAPPopUp shopIAPPopUp;
+
+    [Header("Level Up Screen")]
+    [SerializeField] private GameObject panelLevelUp;
+    [SerializeField] private float levelUpFadeDuration = 0.5f;
     public PausePopup pausePopup => popUpPauseGame;
+
+    private CanvasGroup _levelUpCanvasGroup;
+    // True when ShowLevelUpPopup fade has completed and panel is fully visible
+    public bool LevelUpShown { get; private set; } = false;
+
+    private void Awake()
+    {
+        // Prepare level-up CanvasGroup and initial hidden state
+        if (panelLevelUp != null)
+        {
+            _levelUpCanvasGroup = panelLevelUp.GetComponent<CanvasGroup>();
+            if (_levelUpCanvasGroup == null)
+                _levelUpCanvasGroup = panelLevelUp.AddComponent<CanvasGroup>();
+            _levelUpCanvasGroup.alpha = 0f;
+            _levelUpCanvasGroup.interactable = false;
+            _levelUpCanvasGroup.blocksRaycasts = false;
+            panelLevelUp.SetActive(false);
+        }
+    }
+
+    // PopupController only exposes show/hide; no mission handling here.
 
     #region TutorialPopup
     [ContextMenu("Show Tutorial Popup")]
@@ -40,6 +66,7 @@ public class PopupController : Singleton<PopupController>
     [ContextMenu("Show GameOver Popup")]
     public void ShowGameOverPopUp()
     {
+        Debug.Log($"CheckGameOverrPopup");
         AudioController.Instance.PlayOpenClosePopup();
         popUpGameOver.ShowPopUp(100f, .6f);
     }
@@ -47,7 +74,7 @@ public class PopupController : Singleton<PopupController>
     public void HideGameOverPopUp()
     {
         AudioController.Instance.PlayOpenClosePopup();
-        popUpGameOver.ShowPopUp(-1800f, .6f);
+        popUpGameOver.HidePopUp(-1800f, .6f);
     }
     #endregion
 
@@ -68,17 +95,55 @@ public class PopupController : Singleton<PopupController>
 
 
     #region ShopIAP
-    [ContextMenu("Show Pause Popup")]
+    [ContextMenu("Show ShopIAP Popup")]
     public void ShowShopIAPPopUp()
     {
         AudioController.Instance.PlayOpenClosePopup();
-        shopIAPPopUp.ShowPopUp(100f, .6f);
+        ShopController.Instance?.ShowShop();
     }
-    [ContextMenu("Hide Pause Popup")]
+    [ContextMenu("Hide ShopIAP Popup")]
     public void HideShopIAPPopUp()
     {
         AudioController.Instance.PlayOpenClosePopup();
-        shopIAPPopUp.HidePopUp(-1800f, .6f);
+        ShopController.Instance?.HideShop();
+    }
+    #endregion
+
+    #region Level Up
+    public void ShowLevelUpPopup()
+    {
+        if (panelLevelUp == null) return;
+        if (_levelUpCanvasGroup == null)
+        {
+            _levelUpCanvasGroup = panelLevelUp.GetComponent<CanvasGroup>();
+            if (_levelUpCanvasGroup == null)
+                _levelUpCanvasGroup = panelLevelUp.AddComponent<CanvasGroup>();
+        }
+        panelLevelUp.SetActive(true);
+        _levelUpCanvasGroup.DOKill();
+        _levelUpCanvasGroup.alpha = 0f;
+        _levelUpCanvasGroup.interactable = true;
+        _levelUpCanvasGroup.blocksRaycasts = true;
+        LevelUpShown = false;
+        AudioController.Instance.PlayLevelUpSound();
+        _levelUpCanvasGroup
+            .DOFade(1f, levelUpFadeDuration)
+            .SetUpdate(true)
+            .OnComplete(() => { LevelUpShown = true; });
+    }
+    public void HideLevelUpPopup()
+    {
+        if (panelLevelUp == null || _levelUpCanvasGroup == null) return;
+        _levelUpCanvasGroup.DOKill();
+        _levelUpCanvasGroup.DOFade(0f, levelUpFadeDuration)
+            .SetUpdate(true)
+            .OnComplete(() =>
+            {
+                _levelUpCanvasGroup.interactable = false;
+                _levelUpCanvasGroup.blocksRaycasts = false;
+                LevelUpShown = false;
+                panelLevelUp.SetActive(false);
+            });
     }
     #endregion
 }

@@ -31,6 +31,27 @@ public class SpawnQueue : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool enableDebug = true;
 
+    [System.Serializable]
+    private struct SpawnThreshold
+    {
+        public int value;          // tile value (e.g. 64)
+        public int requiredMission; // mission that must be unlocked (>=) before this value can appear
+    }
+
+    [System.Serializable]
+    private struct SpawnWeight
+    {
+        public int value;  // tile value
+        public float weight; // relative weight (>0). If missing, fallback formula used.
+    }
+    [Header("Spawn Restrictions & Weights")]
+    [SerializeField, Tooltip("Minimum mission required for certain spawn values.")] private SpawnThreshold[] spawnThresholds = new SpawnThreshold[0];
+    [SerializeField, Tooltip("Custom weights for spawn values (after filtering by mission). Higher = more frequent.")] private SpawnWeight[] spawnWeights = new SpawnWeight[0];
+    [SerializeField, Tooltip("If true, will auto-populate a sensible default threshold/weight config when arrays empty.")] private bool autoConfigureDefaults = true;
+    [SerializeField, Tooltip("Bias multiplier applied to very small values to keep them common.")] private float smallValueBias = 1.0f;
+    [SerializeField, Tooltip("Penalty multiplier applied to larger values (>= largeValueStart) to keep them rare.")] private float largeValuePenalty = 0.35f;
+    [SerializeField, Tooltip("Values >= this are considered 'large' for penalty.")] private int largeValueStart = 64;
+
     [Header("Queue Animation")]
     [SerializeField] private float newItemPopDuration = DataConfig.QUEUE_NEW_ITEM_POP_DURATION;
     [SerializeField] private AnimationCurve popCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -58,6 +79,7 @@ public class SpawnQueue : MonoBehaviour
     {
         if (tileSystem == null)
             tileSystem = FindFirstObjectByType<TileSystem>();
+        EnsureDefaultSpawnConfig();
         EventManager.OnTileSpawnAnimationComplete += HandleSpawnAnimationComplete;
         EventManager.OnMissionChange += HandleMissionChanged;
         EventManager.OnSpawnValueUnlocked += HandleSpawnValueUnlocked;
@@ -191,35 +213,99 @@ public class SpawnQueue : MonoBehaviour
         int missionCap = (MissionController.Instance != null && MissionController.Instance.CurrentMission > 0)
             ? MissionController.Instance.CurrentMission
             : fallbackStartingMission;
+
         var mc = MissionController.Instance;
+        List<int> candidates = new();
         if (mc != null && mc.UnlockedValues != null)
         {
-            var list = new List<int>();
             foreach (var v in mc.UnlockedValues)
             {
-                if (v < missionCap) list.Add(v);
+                if (v < missionCap && PassThreshold(v, missionCap))
+                    candidates.Add(v);
             }
-            if (list.Count > 0)
+        }
+
+        if (candidates.Count == 0)
+        {
+            // fallback to small seeds respecting thresholds
+            int[] seedCandidates = { 2, 4, 8, 16 };
+            foreach (var s in seedCandidates)
             {
-                int idx = Random.Range(0, list.Count);
-                return list[idx];
+                if (s < missionCap && PassThreshold(s, missionCap)) candidates.Add(s);
             }
         }
-        var fallbackSeeds = new List<int>();
-        int[] seedCandidates = { 2, 4, 8 };
-        foreach (var s in seedCandidates)
+
+        if (candidates.Count == 0)
         {
-            if (s < missionCap) fallbackSeeds.Add(s);
+            // ultimate fallback: degrade base value until acceptable
+            int fb = baseValue;
+            while ((fb >= missionCap || !PassThreshold(fb, missionCap)) && fb > 2)
+                fb /= 2;
+            if (fb < 2) fb = 2;
+            candidates.Add(fb);
         }
-        if (fallbackSeeds.Count > 0)
+
+        // Weighted random pick
+        float total = 0f;
+        var weightsTmp = new List<float>(candidates.Count);
+        foreach (var v in candidates)
         {
-            int idx = Random.Range(0, fallbackSeeds.Count);
-            return fallbackSeeds[idx];
+            float w = GetWeightFor(v);
+            weightsTmp.Add(w);
+            total += w;
         }
-        int fb = baseValue;
-        while (fb >= missionCap && fb > 1) fb /= 2;
-        if (fb < 1) fb = 2;
-        return fb;
+        float r = Random.value * total;
+        float accum = 0f;
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            accum += weightsTmp[i];
+            if (r <= accum)
+            {
+                if (enableDebug)
+                {
+                    Debug.Log($"[SpawnQueue] Weighted pick missionCap={missionCap} candidates=[{string.Join(",", candidates)}] weights=[{string.Join(",", weightsTmp)}] => {candidates[i]}");
+                }
+                return candidates[i];
+            }
+        }
+        return candidates[^1];
+    }
+
+    private bool PassThreshold(int value, int missionCap)
+    {
+        if (spawnThresholds == null) return true;
+        for (int i = 0; i < spawnThresholds.Length; i++)
+        {
+            if (spawnThresholds[i].value == value)
+            {
+                return missionCap >= spawnThresholds[i].requiredMission;
+            }
+        }
+        return true; // no entry means no restriction
+    }
+
+    private float GetWeightFor(int value)
+    {
+        if (spawnWeights != null)
+        {
+            for (int i = 0; i < spawnWeights.Length; i++)
+            {
+                if (spawnWeights[i].value == value)
+                {
+                    float w = spawnWeights[i].weight;
+                    if (value >= largeValueStart) w *= largeValuePenalty;
+                    if (value <= 8) w *= smallValueBias;
+                    if (w <= 0f) w = 0.01f;
+                    return w;
+                }
+            }
+        }
+        // fallback weight formula: inverse proportional with mild penalty for large
+        float baseW = 1f / Mathf.Max(1, Mathf.Log(value, 2)); // smaller values larger weight
+        if (value >= largeValueStart) baseW *= largeValuePenalty;
+        if (value <= 8) baseW *= smallValueBias;
+        if (baseW <= 0f) baseW = 0.01f;
+        return baseW;
     }
 
     private void HandleMissionChanged(int newMissionTarget)
@@ -345,6 +431,15 @@ public class SpawnQueue : MonoBehaviour
         {
             _values.Enqueue(value);
             RefreshVisuals();
+            // If the entire board is full (no empty cells), trigger Game Over popup
+            if (tileSystem != null && !tileSystem.HasAnyEmptyCell())
+            {
+                var popup = FindFirstObjectByType<PopupController>();
+                if (popup != null)
+                {
+                    popup.ShowGameOverPopUp();
+                }
+            }
             return false;
         }
         if (lockDuringSpawnAndMerge) _inputLocked = true;
@@ -489,6 +584,47 @@ public class SpawnQueue : MonoBehaviour
         InGameData.CurrentQueueValues.Clear();
         foreach (var v in _values)
             InGameData.CurrentQueueValues.Add(v);
+    }
+
+    private void EnsureDefaultSpawnConfig()
+    {
+        if (!autoConfigureDefaults) return;
+        bool needThresholds = (spawnThresholds == null || spawnThresholds.Length == 0);
+        bool needWeights = (spawnWeights == null || spawnWeights.Length == 0);
+        if (!needThresholds && !needWeights) return;
+
+        // Provide a reasonable progressive unlock & rarity curve.
+        if (needThresholds)
+        {
+            spawnThresholds = new[]
+            {
+                new SpawnThreshold{ value = 2, requiredMission = 4 },
+                new SpawnThreshold{ value = 4, requiredMission = 8 },
+                new SpawnThreshold{ value = 8, requiredMission = 16 },
+                new SpawnThreshold{ value = 16, requiredMission = 32 },
+                new SpawnThreshold{ value = 32, requiredMission = 128 },
+                new SpawnThreshold{ value = 64, requiredMission = 256 }, // 64 only after mission 256
+                new SpawnThreshold{ value = 128, requiredMission = 512 },
+                new SpawnThreshold{ value = 256, requiredMission = 1024 },
+                new SpawnThreshold{ value = 512, requiredMission = 2048 },
+            };
+        }
+        if (needWeights)
+        {
+            // Heavier bias to small tiles, drastically reduce large.
+            spawnWeights = new[]
+            {
+                new SpawnWeight{ value = 2, weight = 30f },
+                new SpawnWeight{ value = 4, weight = 22f },
+                new SpawnWeight{ value = 8, weight = 16f },
+                new SpawnWeight{ value = 16, weight = 10f },
+                new SpawnWeight{ value = 32, weight = 5f },
+                new SpawnWeight{ value = 64, weight = 2.2f },
+                new SpawnWeight{ value = 128, weight = 1.2f },
+                new SpawnWeight{ value = 256, weight = 0.6f },
+                new SpawnWeight{ value = 512, weight = 0.3f },
+            };
+        }
     }
 }
 

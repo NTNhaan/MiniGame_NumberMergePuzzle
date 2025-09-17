@@ -15,20 +15,33 @@ public class MainScene : SceneBase
 
     void Start()
     {
-        if (DBController.Instance != null && highestBlockText != null)
+        // Initialize highest text and image. If DB not set, derive from mission state.
+        int displayInit = 256;
+        if (MissionController.Instance != null)
+        {
+            displayInit = Mathf.Max(256, MissionController.Instance.StartingMission);
+        }
+        if (DBController.Instance != null)
         {
             int highest = DBController.Instance.HIGHEST_MISSION_BLOCK;
-            int display = highest > 0 ? highest : 256;
-            highestBlockText.text = display.ToString();
-            if (highestBlockImg != null && MissionController.Instance != null)
-            {
-                var sp = MissionController.Instance.GetCurrentMissionSprite();
-                if (sp != null) highestBlockImg.sprite = sp;
-            }
+            if (highest > 0) displayInit = highest; else DBController.Instance.HIGHEST_MISSION_BLOCK = displayInit;
+        }
+        // For UI consistency, show the current mission number in the text (matches image)
+        if (highestBlockText != null)
+        {
+            int currentMission = (MissionController.Instance != null) ? MissionController.Instance.CurrentMission : displayInit;
+            highestBlockText.text = currentMission.ToString();
+        }
+        if (highestBlockImg != null && MissionController.Instance != null)
+        {
+            var sp = MissionController.Instance.GetCurrentMissionSprite();
+            if (sp != null) highestBlockImg.sprite = sp;
         }
         SettingCtrl.Instance.InitSetting();
         AudioController.Instance.PlayOpenClosePopup();
         AudioController.Instance.PlayBackroundMusicGameplay();
+        if (DBController.Instance != null)
+            Debug.Log($"CheckDataShape {DBController.Instance.HIGHEST_MISSION_BLOCK}");
     }
     private void OnEnable()
     {
@@ -41,16 +54,21 @@ public class MainScene : SceneBase
 
     private void HandleMissionChangeMainScene(int newMissionTarget)
     {
-        if (DBController.Instance == null) return;
-        int achieved = newMissionTarget / 2;
-        if (achieved > DBController.Instance.HIGHEST_MISSION_BLOCK)
+        int achieved = (MissionController.Instance != null)
+            ? MissionController.Instance.GetPreviousMissionValue(newMissionTarget)
+            : newMissionTarget / 2;
+        // Persist highest if DB is available
+        if (DBController.Instance != null)
         {
-            DBController.Instance.HIGHEST_MISSION_BLOCK = achieved;
+            if (achieved > DBController.Instance.HIGHEST_MISSION_BLOCK)
+            {
+                DBController.Instance.HIGHEST_MISSION_BLOCK = achieved;
+            }
         }
+        // Update the text to show the CURRENT mission (matches image)
         if (highestBlockText != null)
         {
-            int highest = DBController.Instance.HIGHEST_MISSION_BLOCK;
-            highestBlockText.text = (highest > 0 ? highest : 256).ToString();
+            highestBlockText.text = newMissionTarget.ToString();
         }
         if (highestBlockImg != null && MissionController.Instance != null)
         {
@@ -85,7 +103,9 @@ public class MainScene : SceneBase
     {
         AudioController.Instance.PlaySoundButtonClick();
         InGameData.GAME_STATE = GameState.GamePlay;
-        SceneManager.LoadScene("GamePlayScene");
+        // SceneManager.LoadScene("GamePlayScene");
+        SceneController.Instance?.ChangeScene(SceneType.GamePlayScene);
+
         // if (!DBController.Instance.TUTORIAL_COMPLETED)
         // {
         //     SceneManager.LoadScene("TutorialScene");
@@ -110,5 +130,9 @@ public class MainScene : SceneBase
     {
         AudioController.Instance.PlaySoundButtonClick();
         SettingCtrl.Instance.SetMusic();
+    }
+    public void OnClickShowIAP()
+    {
+        ShopController.Instance?.ShowShop();
     }
 }

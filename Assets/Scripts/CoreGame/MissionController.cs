@@ -64,12 +64,51 @@ public class MissionController : Singleton<MissionController>
         if (nextMission <= 0) return;
         CurrentMission = nextMission;
         EventManager.MissionChanged(CurrentMission);
+        PopupController.Instance.ShowLevelUpPopup();
+        // // var popup = FindFirstObjectByType<PopupController>();
+        // if (popup != null)
+        // {
+        //     popup.ShowLevelUpPopup();
+        // }
     }
 
     public Sprite GetCurrentMissionSprite()
     {
         if (brickSet == null) return null;
         return brickSet.GetSprite(CurrentMission);
+    }
+
+    public int GetPreviousMissionValue(int current)
+    {
+        int candidate = -1;
+        if (brickSet != null && brickSet.bricks != null && brickSet.bricks.Count > 0)
+        {
+            for (int i = 0; i < brickSet.bricks.Count; i++)
+            {
+                int val = brickSet.bricks[i].number;
+                if (val < current)
+                {
+                    if (candidate < 0 || val > candidate) candidate = val;
+                }
+            }
+        }
+        if (candidate < 0 && DataConfig.ALLOWED_VALUES != null && DataConfig.ALLOWED_VALUES.Length > 0)
+        {
+            for (int i = 0; i < DataConfig.ALLOWED_VALUES.Length; i++)
+            {
+                int val = DataConfig.ALLOWED_VALUES[i];
+                if (val < current)
+                {
+                    if (candidate < 0 || val > candidate) candidate = val;
+                }
+            }
+        }
+        if (candidate < 0)
+        {
+            int half = current / 2;
+            if (half > 0) candidate = half;
+        }
+        return candidate > 0 ? candidate : 256;
     }
 
     public int GetNextMissionValue(int current)

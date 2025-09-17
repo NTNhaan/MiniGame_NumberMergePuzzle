@@ -1,4 +1,5 @@
 using Data;
+using DefaultNamespace;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -36,6 +37,8 @@ public class ItemCoin : MonoBehaviour
     }
     public void OnSuccess()
     {
-        // Reward is applied in IAPController.ProcessPurchase. Use this hook for UI effects only.
+        // Cập nhật coins trong Database
+        DBController.Instance.COIN += coinReceive;
+        ScoreController.Instance.UpdateCoin();
     }
 }
