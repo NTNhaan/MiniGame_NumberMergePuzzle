@@ -43,7 +43,7 @@ public class BoosterController : MonoBehaviour
 
     private bool CanAffordBooster()
     {
-        if (DBController.Instance == null) return true; // allow if DB not ready
+        if (DBController.Instance == null) return true; 
         return DBController.Instance.COIN >= DataConfig.COIN_BOOSTER;
     }
 
@@ -51,7 +51,7 @@ public class BoosterController : MonoBehaviour
     {
         if (DBController.Instance == null) return true;
         if (DBController.Instance.COIN < DataConfig.COIN_BOOSTER) return false;
-        DBController.Instance.COIN -= DataConfig.COIN_BOOSTER; // triggers EventManager.CoinChanged via DBController
+        DBController.Instance.COIN -= DataConfig.COIN_BOOSTER; 
         return true;
     }
 
@@ -59,7 +59,7 @@ public class BoosterController : MonoBehaviour
 
     public void ActivateDestroy()
     {
-        if (tileSystem != null && tileSystem.Busy) return; // tránh dùng trong lúc merge
+        if (tileSystem != null && tileSystem.Busy) return; 
         if (!CanAffordBooster()) { OpenShopForCoins(); return; }
         _mode = BoosterMode.DestroySelect;
         _firstSelection = null;
@@ -132,7 +132,6 @@ public class BoosterController : MonoBehaviour
         textCover.text = notMatchGuide;
         textCover.gameObject.SetActive(true);
         yield return new WaitForSeconds(1.0f);
-        // Revert to the default guide if still in merge selection
         if (_mode == BoosterMode.MergeSecond || _mode == BoosterMode.MergeFirst)
         {
             textCover.text = mergeGuide;
@@ -141,7 +140,6 @@ public class BoosterController : MonoBehaviour
         _notMatchRoutine = null;
     }
 
-    // New handling: open shop instead of temporary text when lacking coins
     private void OpenShopForCoins()
     {
         Cancel();
@@ -151,7 +149,6 @@ public class BoosterController : MonoBehaviour
         }
         else
         {
-            // Fallback old behavior
             if (textCover != null)
             {
                 ShowPanel(true);
@@ -166,7 +163,7 @@ public class BoosterController : MonoBehaviour
         if (tile == null) return;
         if (tileSystem == null) tileSystem = FindFirstObjectByType<TileSystem>();
         if (_mode == BoosterMode.None) return;
-        if (tileSystem != null && tileSystem.Busy) return; // chờ merge/spawn xong
+        if (tileSystem != null && tileSystem.Busy) return;
 
         switch (_mode)
         {
@@ -207,9 +204,7 @@ public class BoosterController : MonoBehaviour
                 if (_firstSelection == tile) { Cancel(); break; }
                 if (_firstSelection.Value != tile.Value)
                 {
-                    // Chọn sai cặp: hiển thị hướng dẫn notMatch và tiếp tục chờ chọn block thứ 2
                     ShowNotMatchHint();
-                    // giữ nguyên _firstSelection và _mode = MergeSecond
                     break;
                 }
                 if (!CanAffordBooster()) { OpenShopForCoins(); break; }

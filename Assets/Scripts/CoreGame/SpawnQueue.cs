@@ -34,15 +34,15 @@ public class SpawnQueue : MonoBehaviour
     [System.Serializable]
     private struct SpawnThreshold
     {
-        public int value;          // tile value (e.g. 64)
-        public int requiredMission; // mission that must be unlocked (>=) before this value can appear
+        public int value;          
+        public int requiredMission; 
     }
 
     [System.Serializable]
     private struct SpawnWeight
     {
-        public int value;  // tile value
-        public float weight; // relative weight (>0). If missing, fallback formula used.
+        public int value; 
+        public float weight; 
     }
     [Header("Spawn Restrictions & Weights")]
     [SerializeField, Tooltip("Minimum mission required for certain spawn values.")] private SpawnThreshold[] spawnThresholds = new SpawnThreshold[0];
@@ -227,7 +227,6 @@ public class SpawnQueue : MonoBehaviour
 
         if (candidates.Count == 0)
         {
-            // fallback to small seeds respecting thresholds
             int[] seedCandidates = { 2, 4, 8, 16 };
             foreach (var s in seedCandidates)
             {
@@ -237,7 +236,6 @@ public class SpawnQueue : MonoBehaviour
 
         if (candidates.Count == 0)
         {
-            // ultimate fallback: degrade base value until acceptable
             int fb = baseValue;
             while ((fb >= missionCap || !PassThreshold(fb, missionCap)) && fb > 2)
                 fb /= 2;
@@ -245,7 +243,6 @@ public class SpawnQueue : MonoBehaviour
             candidates.Add(fb);
         }
 
-        // Weighted random pick
         float total = 0f;
         var weightsTmp = new List<float>(candidates.Count);
         foreach (var v in candidates)
@@ -281,7 +278,7 @@ public class SpawnQueue : MonoBehaviour
                 return missionCap >= spawnThresholds[i].requiredMission;
             }
         }
-        return true; // no entry means no restriction
+        return true;
     }
 
     private float GetWeightFor(int value)
@@ -300,8 +297,7 @@ public class SpawnQueue : MonoBehaviour
                 }
             }
         }
-        // fallback weight formula: inverse proportional with mild penalty for large
-        float baseW = 1f / Mathf.Max(1, Mathf.Log(value, 2)); // smaller values larger weight
+        float baseW = 1f / Mathf.Max(1, Mathf.Log(value, 2)); 
         if (value >= largeValueStart) baseW *= largeValuePenalty;
         if (value <= 8) baseW *= smallValueBias;
         if (baseW <= 0f) baseW = 0.01f;
@@ -398,7 +394,6 @@ public class SpawnQueue : MonoBehaviour
         if (tileSystem == null || tileSystem.Grid == null) return false;
         if (column < 0 || column >= tileSystem.Grid.Columns) return false;
         if (lockDuringSpawnAndMerge && _inputLocked) return false;
-        // Chặn spawn khi đang dùng booster
         if (BoosterController.Instance != null && BoosterController.Instance.IsActive) return false;
         if (_values.Count == 0) FillQueue();
         int value = 0;
@@ -431,7 +426,6 @@ public class SpawnQueue : MonoBehaviour
         {
             _values.Enqueue(value);
             RefreshVisuals();
-            // If the entire board is full (no empty cells), trigger Game Over popup
             if (tileSystem != null && !tileSystem.HasAnyEmptyCell())
             {
                 var popup = FindFirstObjectByType<PopupController>();
@@ -593,7 +587,6 @@ public class SpawnQueue : MonoBehaviour
         bool needWeights = (spawnWeights == null || spawnWeights.Length == 0);
         if (!needThresholds && !needWeights) return;
 
-        // Provide a reasonable progressive unlock & rarity curve.
         if (needThresholds)
         {
             spawnThresholds = new[]
@@ -603,7 +596,7 @@ public class SpawnQueue : MonoBehaviour
                 new SpawnThreshold{ value = 8, requiredMission = 16 },
                 new SpawnThreshold{ value = 16, requiredMission = 32 },
                 new SpawnThreshold{ value = 32, requiredMission = 128 },
-                new SpawnThreshold{ value = 64, requiredMission = 256 }, // 64 only after mission 256
+                new SpawnThreshold{ value = 64, requiredMission = 256 }, 
                 new SpawnThreshold{ value = 128, requiredMission = 512 },
                 new SpawnThreshold{ value = 256, requiredMission = 1024 },
                 new SpawnThreshold{ value = 512, requiredMission = 2048 },
@@ -611,7 +604,6 @@ public class SpawnQueue : MonoBehaviour
         }
         if (needWeights)
         {
-            // Heavier bias to small tiles, drastically reduce large.
             spawnWeights = new[]
             {
                 new SpawnWeight{ value = 2, weight = 30f },

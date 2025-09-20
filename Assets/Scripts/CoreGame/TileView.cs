@@ -29,7 +29,6 @@ public class TileView : MonoBehaviour
         Y = y;
         if (background != null) background.color = color;
         if (valueText != null) valueText.text = value.ToString();
-        // Đảm bảo có thể nhận raycast cho booster click
         if (background != null && background.raycastTarget == false)
             background.raycastTarget = true;
         name = $"Tile_{value}_{x}_{y}";

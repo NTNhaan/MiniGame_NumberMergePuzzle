@@ -26,7 +26,7 @@ public class TileSystem : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool enableDebug = true;
-    [SerializeField] private bool optimizeClusters = true; // giảm GC khi tìm cluster
+    [SerializeField] private bool optimizeClusters = true;
 
     [Header("Scoring")]
     [SerializeField] private bool addScoreOnMerge = true;
@@ -120,9 +120,7 @@ public class TileSystem : MonoBehaviour
 
     private void Start()
     {
-        // Register any pre-placed tiles in the grid (from prefab/scene)
         RegisterExistingTilesInScene();
-        // If board full at start, only game over if no merge is possible
         if (IsBoardStuck())
         {
             var popup = FindFirstObjectByType<PopupController>();
@@ -430,13 +428,11 @@ public class TileSystem : MonoBehaviour
             EventManager.TileSpawnAnimationComplete(x, y);
             if (Audio.AudioController.Instance != null)
                 Audio.AudioController.Instance.PlayPutDownShape();
-            // If board looks full, verify no merges exist before game over
             if (IsBoardStuck())
             {
                 var popup = FindFirstObjectByType<PopupController>();
                 if (popup != null) popup.ShowGameOverPopUp();
             }
-            // Ensure column compaction after spawn to push tiles to top
             ScheduleCompactionColumn(x);
             if (verboseAlignmentDebug)
             {
@@ -513,7 +509,6 @@ public class TileSystem : MonoBehaviour
         return results;
     }
 
-    // Optimized non-alloc style cluster finder (reuse buffers)
     private readonly List<(int x, int y)> _clusterTemp = new(64);
     private bool[,] _visitedGrid;
     private Stack<(int x, int y)> _dfsStack;
@@ -575,7 +570,6 @@ public class TileSystem : MonoBehaviour
                     if (better) anchor = cand;
                 }
             }
-            // Choose anchor as the tile with most orthogonal neighbors within the cluster (center of L/T shapes)
             {
                 var clusterSet = new HashSet<(int, int)>();
                 foreach (var p in cluster) clusterSet.Add((p.x, p.y));
@@ -596,7 +590,6 @@ public class TileSystem : MonoBehaviour
                         }
                         else if (deg == bestDeg)
                         {
-                            // Tie-breaker: prefer lower (greater Y), then leftmost (smaller X)
                             bool better = false;
                             if (tv.Y > best.Y) better = true;
                             else if (tv.Y == best.Y && tv.X < best.X) better = true;
@@ -645,7 +638,6 @@ public class TileSystem : MonoBehaviour
                     if (r == null) continue;
                     Vector3 s = _mergeStartPos[r];
                     Vector3 target = anchorPos;
-                    // Always move in a straight line towards the anchor
                     Vector3 newPos = Vector3.LerpUnclamped(s, target, e);
                     r.position = newPos;
                     r.localScale = Vector3.Lerp(_mergeStartScale[r], Vector3.zero, e);
@@ -681,7 +673,6 @@ public class TileSystem : MonoBehaviour
             }
 
             yield return MoveTileUpwards(anchor);
-            // Inter-merge pacing delay (skip if chain finished)
             if (mergeInterDelay > 0f)
             {
                 float wait = 0f;
@@ -694,7 +685,6 @@ public class TileSystem : MonoBehaviour
             }
         }
         yield return CompactAllColumns();
-        // After all merges/compactions, only end if stuck (full & no merge)
         if (IsBoardStuck())
         {
             var popup = FindFirstObjectByType<PopupController>();
@@ -703,17 +693,15 @@ public class TileSystem : MonoBehaviour
         _isMerging = false;
     }
 
-    // Returns true if the board is full AND there is no adjacent pair that can merge
     private bool IsBoardStuck()
     {
-        if (HasAnyEmptyCell()) return false; // not full -> not stuck
+        if (HasAnyEmptyCell()) return false;
         return !HasAnyMergeAvailable();
     }
 
     private bool HasAnyMergeAvailable()
     {
         if (gridController == null) return false;
-        // Check each tile's right and up neighbor (avoid double check)
         for (int x = 0; x < gridController.Columns; x++)
         {
             for (int y = 0; y < gridController.Rows; y++)
@@ -721,13 +709,11 @@ public class TileSystem : MonoBehaviour
                 var tile = GetTile(x, y);
                 if (tile == null) continue;
                 int v = tile.Value;
-                // Right neighbor
                 if (x + 1 < gridController.Columns)
                 {
                     var right = GetTile(x + 1, y);
                     if (right != null && right.Value == v) return true;
                 }
-                // Up neighbor
                 if (y + 1 < gridController.Rows)
                 {
                     var up = GetTile(x, y + 1);
@@ -823,7 +809,7 @@ public class TileSystem : MonoBehaviour
 
     private IEnumerator ProcessCompactionsEndOfFrame()
     {
-        yield return null; // coalesce same-frame requests
+        yield return null;
         _compactionQueued = false;
         var cols = new List<int>(_pendingCompactionColumns);
         _pendingCompactionColumns.Clear();
@@ -953,7 +939,6 @@ public class TileSystem : MonoBehaviour
     private void RegisterExistingTilesInScene()
     {
         if (gridController == null) return;
-        // Clear any stale dict
         _tiles.Clear();
         for (int y = 0; y < gridController.Rows; y++)
         {
@@ -961,7 +946,6 @@ public class TileSystem : MonoBehaviour
             {
                 var cell = gridController.GetCell(x, y);
                 if (cell == null) continue;
-                // Expect at most one TileView per cell
                 var tv = cell.GetComponentInChildren<TileView>();
                 if (tv == null) continue;
                 tv.SetGridPosition(x, y);
@@ -997,13 +981,11 @@ public class TileSystem : MonoBehaviour
         if (a == null || b == null) return false;
         if (_isMerging || _isAnimatingSpawn) return false;
         if (!_tiles.ContainsKey((a.X, a.Y)) || !_tiles.ContainsKey((b.X, b.Y))) return false;
-        // Hoán đổi giá trị (và sprite) giữa 2 tile, toạ độ giữ nguyên.
         int tempVal = a.Value;
         a.UpdateValue(b.Value);
         ApplySprite(a, a.Value);
         b.UpdateValue(tempVal);
         ApplySprite(b, b.Value);
-        // Đợi một khoảng ngắn rồi mới kiểm tra merge để user thấy rõ thao tác swap.
         StartCoroutine(SwapCheckAfterDelay(a, b));
         return true;
     }
@@ -1016,14 +998,12 @@ public class TileSystem : MonoBehaviour
         if (a.Value != b.Value) return false;
         if (!_tiles.ContainsKey((a.X, a.Y)) || !_tiles.ContainsKey((b.X, b.Y))) return false;
 
-        // Thực hiện merge cặp và chạy chuỗi xử lý hoàn tất + auto-chain
         StartCoroutine(BoosterMergeFollowUp(a, b));
         return true;
     }
 
     private IEnumerator BoosterMergeFollowUp(TileView a, TileView b)
     {
-        // Merge logic: keep 'a' as anchor, remove 'b'
         int oldVal = a.Value;
         int newVal = oldVal * 2;
         _tiles.Remove((b.X, b.Y));
@@ -1032,17 +1012,14 @@ public class TileSystem : MonoBehaviour
         ApplySprite(a, newVal);
         if (Audio.AudioController.Instance != null)
             Audio.AudioController.Instance.PlayMergeSound();
-        // mission & score
         var mc = MissionController.Instance != null ? MissionController.Instance : MissionController.Ensure();
         mc?.TryUnlock(newVal);
         if (ScoreController.Instance != null)
         {
             ScoreController.Instance.AddPoints(newVal);
         }
-        // Complete movement and compaction first
         yield return MoveTileUpwards(a);
         yield return CompactAllColumns();
-        // Then auto-merge if the new tile has an adjacent identical neighbor
         var cluster = GetClusterPositions(a.X, a.Y, a.Value);
         if (cluster.Count >= 2 && !_isMerging)
         {
@@ -1109,7 +1086,6 @@ public class TileSystem : MonoBehaviour
         _smileRunning = false;
     }
 
-    // Delay check after swap so player perceives the swap before merge animation fires
     private IEnumerator SwapCheckAfterDelay(TileView a, TileView b)
     {
         float t = 0f;
@@ -1119,7 +1095,6 @@ public class TileSystem : MonoBehaviour
             yield return null;
         }
         if (_isMerging || _isAnimatingSpawn) yield break;
-        // Validate tiles still exist and haven't changed value drastically (optional)
         if (a == null || b == null) yield break;
         if (!_tiles.ContainsKey((a.X, a.Y)) || !_tiles.ContainsKey((b.X, b.Y))) yield break;
         bool shouldMerge = false;
@@ -1137,21 +1112,19 @@ public class TileSystem : MonoBehaviour
 
     private void ScheduleAutoMergeScan()
     {
-        if (_pendingAutoMerge) return; // đã có lịch
-        _pendingAutoMerge = true; // đánh dấu trước
+        if (_pendingAutoMerge) return;
+        _pendingAutoMerge = true;
         StartCoroutine(AutoMergeScanNextFrame());
     }
 
     private IEnumerator AutoMergeScanNextFrame()
     {
-        // Đảm bảo dictionary đã cập nhật vị trí (frame tiếp theo)
         yield return null;
-        // Chờ đến khi không còn spawn hoặc merge đang chạy để tránh bỏ sót cụm
-        int safety = 180; // ~3s ở 60fps
+        int safety = 180;
         while ((_isMerging || _isAnimatingSpawn) && safety-- > 0)
             yield return null;
-        _pendingAutoMerge = false; // sắp chạy scan thực
-        if (_isMerging || _isAnimatingSpawn) yield break; // vẫn đang bận -> bỏ (scan khác sẽ được schedule nếu còn compaction)
+        _pendingAutoMerge = false;
+        if (_isMerging || _isAnimatingSpawn) yield break;
         var keys = new List<(int x, int y)>(_tiles.Keys);
         foreach (var k in keys)
         {
@@ -1161,7 +1134,6 @@ public class TileSystem : MonoBehaviour
             if (cluster.Count >= 2)
             {
                 StartCoroutine(MergeClusterChain(tv));
-                // Nếu còn khả năng xuất hiện cụm khác sau chain này, lên lịch lại.
                 if (autoMergeAfterCompaction)
                 {
                     ScheduleAutoMergeScan();

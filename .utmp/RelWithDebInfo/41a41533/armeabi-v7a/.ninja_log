@@ -1,12 +1,12 @@
 # ninja log v5
-227	1160	7785476354337935	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	b3b979c96c05f053
-1163	1721	7785476359980649	C:/Users/Nhan/Documents/Project/gametest/NumberMergePuzzle/Library/Bee/Android/Prj/Mono2x/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/41a41533/obj/armeabi-v7a/libswappywrapper.so	df5627f30ecaee6c
-183	5266	7785476395360664	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	9e068727bfec28f4
-198	5328	7785476395999542	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	b48abef9a93a900e
-142	5330	7785476396044949	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	5e07b997a70fd72b
-170	5429	7785476396990740	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	6aa67e954bf26397
-214	5465	7785476397154963	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	ddc076c9d10def8
-127	5579	7785476398491008	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	5d150b29f6472128
-155	5800	7785476400736164	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	91bed1adbf240bb0
-113	5950	7785476402179934	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	40988db78aea99b6
-5950	6254	7785476405350880	C:/Users/Nhan/Documents/Project/gametest/NumberMergePuzzle/Library/Bee/Android/Prj/Mono2x/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/41a41533/obj/armeabi-v7a/libgame.so	6f6853d944384a1c
+108	394	7799994265906275	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	c272711d6e858f59
+398	736	7799994269348097	C:/Users/Nhan/Documents/Project/gametest/NumberMergePuzzle/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/41a41533/obj/armeabi-v7a/libswappywrapper.so	ac7a0f1bd0bc49c
+47	1562	7799994277581545	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	5e99e8d1e1de4791
+36	1567	7799994277576483	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	20305161b8647ee
+0	1636	7799994278334037	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	1de70bb7a0b0d5fd
+90	1717	7799994279105078	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	1a16060730da2d0b
+74	1764	7799994279577790	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	7d2ef1c24400eb1a
+25	1870	7799994280702747	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	d529d28f4e490503
+60	2089	7799994282890799	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	d32960d4add89d3a
+14	2272	7799994284716303	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	17810cadbc5c78ef
+2272	2459	7799994286660634	C:/Users/Nhan/Documents/Project/gametest/NumberMergePuzzle/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/41a41533/obj/armeabi-v7a/libgame.so	2762327eb98603ae
