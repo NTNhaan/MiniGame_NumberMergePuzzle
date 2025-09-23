@@ -13,7 +13,7 @@ public class BoosterTileClick : MonoBehaviour, IPointerClickHandler, IPointerDow
     public void OnPointerClick(PointerEventData eventData)
     {
         if (BoosterController.Instance == null) return;
-        if (!BoosterController.Instance.IsActive) return; 
+        if (!BoosterController.Instance.IsActive) return;
         BoosterController.Instance.HandleTileClicked(_tile);
     }
 

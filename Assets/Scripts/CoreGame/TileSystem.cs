@@ -69,6 +69,10 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private float pixelsPerSecond = DataConfig.TILE_PIXELS_PER_SECOND;
     [SerializeField] private float minDuration = DataConfig.TILE_MIN_DURATION;
     [SerializeField] private float maxDuration = DataConfig.TILE_MAX_DURATION;
+    [Header("Speed Tuning")]
+    [Tooltip("Multiply the computed spawn duration. Lower = faster.")]
+    [Range(0.5f, 1.5f)]
+    [SerializeField] private float spawnDurationScale = 0.9f;
 
     [Header("Queue -> Column Transition")]
     [SerializeField] private bool twoPhaseFromQueue = DataConfig.TILE_TWO_PHASE_FROM_QUEUE;
@@ -79,6 +83,8 @@ public class TileSystem : MonoBehaviour
     [SerializeField] private bool verboseAlignmentDebug = false;
     [Header("Two-Phase Variants")]
     [SerializeField] private bool lShapeTwoPhase = DataConfig.TILE_L_SHAPE_TWO_PHASE;
+    [Tooltip("If the horizontal distance (in local canvas units) from queue to target is below this, skip the horizontal leg and move immediately.")]
+    [SerializeField] private float horizontalSkipEpsilon = 20f;
 
     [Header("Booster Swap Settings")]
     [Tooltip("Delay (seconds) before checking auto-merge after a booster Swap.")]
@@ -124,7 +130,12 @@ public class TileSystem : MonoBehaviour
         if (IsBoardStuck())
         {
             var popup = FindFirstObjectByType<PopupController>();
-            if (popup != null) popup.ShowGameOverPopUp();
+            if (popup != null)
+            {
+                popup.ShowGameOverPopUp();
+                if (Audio.AudioController.Instance != null)
+                    Audio.AudioController.Instance.MediumVibration();
+            }
         }
     }
 
@@ -311,6 +322,31 @@ public class TileSystem : MonoBehaviour
         Vector2 localStart = animationParent.InverseTransformPoint(startWorld);
         Vector2 localTarget = animationParent.InverseTransformPoint(targetWorld);
         Vector2? localMid = midWorld.HasValue ? animationParent.InverseTransformPoint(midWorld.Value) : (Vector2?)null;
+        if (twoPhaseFromQueue)
+        {
+            float dx = Mathf.Abs(localTarget.x - localStart.x);
+            if (dx <= horizontalSkipEpsilon)
+            {
+                localMid = null;
+                localStart.x = localTarget.x;
+            }
+            else
+            {
+                if (gridController != null)
+                {
+                    int cols = gridController.Columns;
+                    if ((cols % 2) == 1)
+                    {
+                        int center = cols / 2;
+                        if (column == center)
+                        {
+                            localMid = null;
+                            localStart.x = localTarget.x;
+                        }
+                    }
+                }
+            }
+        }
 
         tileRect.anchorMin = tileRect.anchorMax = new Vector2(0.5f, 0.5f);
         tileRect.pivot = new Vector2(0.5f, 0.5f);
@@ -329,6 +365,7 @@ public class TileSystem : MonoBehaviour
             duration = Mathf.Clamp(distance / Mathf.Max(10f, pixelsPerSecond), minDuration, maxDuration);
         else
             duration = moveDuration;
+        duration *= Mathf.Clamp(spawnDurationScale, 0.5f, 1.5f);
 
         Vector3 debugStartWorld = startWorld;
         Vector3 debugTargetWorld = targetWorld;
@@ -431,7 +468,12 @@ public class TileSystem : MonoBehaviour
             if (IsBoardStuck())
             {
                 var popup = FindFirstObjectByType<PopupController>();
-                if (popup != null) popup.ShowGameOverPopUp();
+                if (popup != null)
+                {
+                    popup.ShowGameOverPopUp();
+                    if (Audio.AudioController.Instance != null)
+                        Audio.AudioController.Instance.MediumVibration();
+                }
             }
             ScheduleCompactionColumn(x);
             if (verboseAlignmentDebug)
@@ -688,7 +730,12 @@ public class TileSystem : MonoBehaviour
         if (IsBoardStuck())
         {
             var popup = FindFirstObjectByType<PopupController>();
-            if (popup != null) popup.ShowGameOverPopUp();
+            if (popup != null)
+            {
+                popup.ShowGameOverPopUp();
+                if (Audio.AudioController.Instance != null)
+                    Audio.AudioController.Instance.MediumVibration();
+            }
         }
         _isMerging = false;
     }
@@ -973,6 +1020,8 @@ public class TileSystem : MonoBehaviour
         _tiles.Remove((tile.X, tile.Y));
         ReturnToPool(tile);
         StartCoroutine(CompactAllColumns());
+        if (Audio.AudioController.Instance != null)
+            Audio.AudioController.Instance.DefaultVibration();
         return true;
     }
 

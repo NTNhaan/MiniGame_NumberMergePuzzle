@@ -44,6 +44,7 @@ namespace Audio
         public void PlayGameOverSound()
         {
             PlayEffect(Sound.Name.Sound_GameOver);
+            MediumVibration();
         }
         public void PlayMergeSound()
         {
@@ -118,7 +119,7 @@ namespace Audio
             if (DBController.Instance.VIBRATE)
                 HapticFeedback.LightFeedback();
         }
-        private void MediumVibration()
+        public void MediumVibration()
         {
             if (DBController.Instance.VIBRATE)
                 HapticFeedback.MediumFeedback();

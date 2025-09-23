@@ -126,6 +126,7 @@ public class PopupController : Singleton<PopupController>
         _levelUpCanvasGroup.blocksRaycasts = true;
         LevelUpShown = false;
         AudioController.Instance.PlayLevelUpSound();
+        AudioController.Instance.DefaultVibration();
         _levelUpCanvasGroup
             .DOFade(1f, levelUpFadeDuration)
             .SetUpdate(true)

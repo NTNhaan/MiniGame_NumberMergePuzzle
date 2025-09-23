@@ -35,9 +35,9 @@ public class ScreenController : MonoBehaviour
     {
         mainScreen.ClickMusicButton();
     }
-    
-    
-    
+
+
+
     public void ChangeScreen(SceneManager screen)
     {
         // HideCurScreen(() =>
