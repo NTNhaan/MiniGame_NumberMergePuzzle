@@ -62,6 +62,7 @@ public class ShopController : Singleton<ShopController>
 
     public void InitializeIAP()
     {
+        IAPController.Instance.OnPurchaseSuccess = null; // Reset sự kiện để tránh đăng ký nhiều lần
         IAPController.Instance.OnPurchaseSuccess += (key) =>
         {
             Debug.Log($"Purchased item with key: {key}");

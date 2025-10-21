@@ -25,7 +25,7 @@ public class IAPController : Singleton<IAPController>, IStoreListener
     public UnityAction<string> OnPurchaseSuccess;
     public UnityAction<string, PurchaseFailureReason> OnPurchaseFailedAction;
 
-    private void Awake()
+    protected override void CustomAwake()
     {
         InitializeUnityGamingServices();
         InitializePurchasing();

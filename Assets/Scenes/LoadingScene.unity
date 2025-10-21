@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a949a1266d1144d8606ac695a5de83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: beyou_game_buy_coin_500
+  key: nmp_3
   coinReceive: 500
   txtPrice: {fileID: 921855388}
   txtCoin: {fileID: 165122454}
@@ -976,7 +976,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a949a1266d1144d8606ac695a5de83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: beyou_game_buy_coin_2500
+  key: nmp_5
   coinReceive: 2500
   txtPrice: {fileID: 614467924}
   txtCoin: {fileID: 601172087}
@@ -1561,7 +1561,6 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
-  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -1569,6 +1568,7 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &457813782
 GameObject:
   m_ObjectHideFlags: 0
@@ -1695,7 +1695,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a949a1266d1144d8606ac695a5de83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: beyou_game_buy_coin_1000
+  key: nmp_4
   coinReceive: 1000
   txtPrice: {fileID: 1299358585}
   txtCoin: {fileID: 1894892013}
@@ -4231,7 +4231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a949a1266d1144d8606ac695a5de83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: beyou_game_buy_coin_5000
+  key: nmp_6
   coinReceive: 5000
   txtPrice: {fileID: 1922700262}
   txtCoin: {fileID: 666370111}
@@ -4675,7 +4675,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a949a1266d1144d8606ac695a5de83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: beyou_game_buy_coin_250
+  key: nmp_2
   coinReceive: 250
   txtPrice: {fileID: 1210309600}
   txtCoin: {fileID: 432076806}
@@ -6662,17 +6662,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 0
   lstKeyCode:
-  - key: beyou_game_buy_coin_100
+  - key: nmp_1
     productType: 0
-  - key: beyou_game_buy_coin_250
+  - key: nmp_2
     productType: 0
-  - key: beyou_game_buy_coin_500
+  - key: nmp_3
     productType: 0
-  - key: beyou_game_buy_coin_1000
+  - key: nmp_4
     productType: 0
-  - key: beyou_game_buy_coin_2500
+  - key: nmp_5
     productType: 0
-  - key: beyou_game_buy_coin_5000
+  - key: nmp_6
     productType: 0
   isInitialized: 0
 --- !u!1 &6340810194859437509
@@ -6710,11 +6710,11 @@ MonoBehaviour:
   shopIAP: {fileID: 557397396611920928}
   lstItemCoin:
   - {fileID: 7865909394468743079}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 1686404144}
+  - {fileID: 56152072}
+  - {fileID: 464754551}
+  - {fileID: 277525262}
+  - {fileID: 1502830162}
 --- !u!114 &6388964999423136303
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6884,7 +6884,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50a949a1266d1144d8606ac695a5de83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  key: beyou_game_buy_coin_100
+  key: nmp_1
   coinReceive: 100
   txtPrice: {fileID: 673579857998850359}
   txtCoin: {fileID: 6388964999423136303}
